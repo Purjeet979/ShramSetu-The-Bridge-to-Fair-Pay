@@ -2,41 +2,55 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Register New Worker</h4>
-            </div>
+    <div class="col-lg-5 col-md-8">
+        <div class="card p-4">
             <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-circle mb-3" style="width: 50px; height: 50px;">
+                        <i class="fa-solid fa-helmet-safety fs-4"></i>
+                    </div>
+                    <h3 class="fw-bold">New Worker</h3>
+                    <p class="text-muted small">Enter details to register into the system</p>
+                </div>
+
                 <form method="POST" action="/add_worker">
                     <div class="mb-3">
-                        <label class="form-label">Worker Name</label>
-                        <input type="text" name="name" class="form-control" placeholder="Enter full name" required>
+                        <label class="form-label fw-bold small text-uppercase text-muted">Full Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. Ramesh Kumar" required>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Phone Number</label>
-                        <input type="text" name="phone" class="form-control" placeholder="10-digit mobile number">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Phone Number</label>
+                        <input type="text" name="phone" class="form-control" placeholder="+91 98765 43210">
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Worker Type</label>
-                        <select name="worker_type" class="form-select">
-                            <option value="Unskilled">Unskilled Worker (1.5x Overtime)</option>
-                            <option value="Skilled">Skilled Worker (2.0x Overtime)</option>
-                        </select>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Skill Level</label>
+                            <select name="worker_type" class="form-select">
+                                <option value="Unskilled">Unskilled (1.5x OT)</option>
+                                <option value="Skilled">Skilled (2.0x OT)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Hourly Rate (₹)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">₹</span>
+                                <input type="number" step="0.01" name="rate" class="form-control border-start-0 ps-0" placeholder="100" required>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Hourly Rate (₹)</label>
-                        <input type="number" step="0.01" name="rate" class="form-control" placeholder="e.g. 100" required>
-                    </div>
-
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">Save to Database</button>
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fa-solid fa-check me-2"></i>Register Worker
+                        </button>
                     </div>
                 </form>
             </div>
+        </div>
+        <div class="text-center mt-3">
+            <a href="/" class="text-decoration-none text-muted small"><i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard</a>
         </div>
     </div>
 </div>

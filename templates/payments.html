@@ -1,35 +1,58 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header bg-success text-white">
-        <h4 class="mb-0">Pending Payments (Unpaid)</h4>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Pending Payments</h2>
+        <p class="text-muted">Manage unpaid wages and verify records.</p>
     </div>
-    <div class="card-body">
+    <button class="btn btn-dark"><i class="fa-solid fa-download me-2"></i>Export Report</button>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
         {% if payments %}
-        <div class="table-responsive">
-            <table class="table table-hover table-bordered align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Entry ID</th>
-                        <th>Worker Name</th>
-                        <th>Date</th>
-                        <th>Calculated Wage</th>
-                        <th>Status</th>
+        <div class="table-responsive rounded-3">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-secondary">
+                    <tr class="text-uppercase small fw-bold">
+                        <th class="ps-4 py-3">ID</th>
+                        <th class="py-3">Worker Name</th>
+                        <th class="py-3">Date</th>
+                        <th class="py-3">Wage</th>
+                        <th class="py-3">Status</th>
+                        <th class="text-end pe-4 py-3">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for row in payments %}
                     <tr>
-                        <td>#{{ row[1] }}</td> <td class="fw-bold">{{ row[0] }}</td> <td>{{ row[2] }}</td> <td class="text-success fw-bold">₹{{ row[3] }}</td> <td><span class="badge bg-warning text-dark">Pending</span></td>
+                        <td class="ps-4 text-muted">#{{ row[1] }}</td> <td class="fw-bold text-dark">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                    {{ row[0][0] }}
+                                </div>
+                                {{ row[0] }}
+                            </div>
+                        </td>
+                        <td class="text-muted">{{ row[2] }}</td> <td class="text-success fw-bold">₹{{ row[3] }}</td> <td><span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill">Pending</span></td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-sm btn-success rounded-pill px-3">
+                                Pay Now
+                            </button>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         {% else %}
-            <div class="alert alert-success text-center">
-                All caught up! No pending payments.
+            <div class="text-center py-5">
+                <div class="mb-3 text-muted opacity-25">
+                    <i class="fa-solid fa-file-invoice-dollar fa-4x"></i>
+                </div>
+                <h5 class="fw-bold text-muted">All caught up!</h5>
+                <p class="text-muted">No pending payments found.</p>
             </div>
         {% endif %}
     </div>
