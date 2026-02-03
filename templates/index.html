@@ -1,34 +1,79 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="p-5 mb-4 bg-white rounded-3 shadow-sm text-center">
-    <h1 class="display-5 fw-bold">Welcome to Shram Setu</h1>
-    <p class="col-md-8 fs-4 mx-auto">Digital Wage Protection System</p>
-    <p class="text-muted">Ensure fair payments, track overtime automatically, and maintain a non-deniable record of work.</p>
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 60px 40px;
+        box-shadow: 0 20px 40px rgba(37, 99, 235, 0.2);
+        margin-bottom: 40px;
+    }
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+    .icon-box {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="hero-section text-center text-md-start d-flex align-items-center justify-content-between position-relative overflow-hidden">
+    <div class="position-relative z-1">
+        <h1 class="display-4 fw-bold mb-3">Fair Pay for Every Hour.</h1>
+        <p class="lead opacity-75 mb-4">A non-deniable, digital verification system to ensure daily wage workers get the money they deserve.</p>
+        <a href="/record_work" class="btn btn-light text-primary fw-bold px-4 py-3 rounded-pill">
+            <i class="fa-solid fa-clock me-2"></i>Start Recording
+        </a>
+    </div>
+    <i class="fa-solid fa-shield-halved position-absolute opacity-25" style="font-size: 15rem; right: -20px; top: 10px; color: rgba(255,255,255,0.1);"></i>
 </div>
 
-<div class="row align-items-md-stretch">
-    <div class="col-md-4 mb-3">
-        <div class="h-100 p-4 bg-white border rounded-3 text-center">
-            <h3>👷 Register</h3>
-            <p>Add new skilled or unskilled workers to the database.</p>
-            <a href="/add_worker" class="btn btn-outline-primary">Add Worker</a>
+<div class="row align-items-stretch">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 feature-card p-4">
+            <div class="card-body">
+                <div class="icon-box bg-primary bg-opacity-10 text-primary">
+                    <i class="fa-solid fa-user-plus"></i>
+                </div>
+                <h4 class="card-title fw-bold">Register Worker</h4>
+                <p class="text-muted">Onboard new skilled or unskilled laborers to the database securely.</p>
+                <a href="/add_worker" class="btn btn-outline-primary w-100 mt-2">Add New</a>
+            </div>
         </div>
     </div>
 
-    <div class="col-md-4 mb-3">
-        <div class="h-100 p-4 bg-white border rounded-3 text-center">
-            <h3>⏱️ Record Work</h3>
-            <p>Log daily hours. Overtime is calculated automatically.</p>
-            <a href="/record_work" class="btn btn-outline-warning">Log Hours</a>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 feature-card p-4 border-warning border-top border-4">
+            <div class="card-body">
+                <div class="icon-box bg-warning bg-opacity-10 text-warning">
+                    <i class="fa-solid fa-stopwatch"></i>
+                </div>
+                <h4 class="card-title fw-bold">Daily Log</h4>
+                <p class="text-muted">Track hours. Our system auto-calculates 1.5x or 2.0x overtime wages.</p>
+                <a href="/record_work" class="btn btn-outline-warning w-100 mt-2">Log Hours</a>
+            </div>
         </div>
     </div>
 
-    <div class="col-md-4 mb-3">
-        <div class="h-100 p-4 bg-white border rounded-3 text-center">
-            <h3>💰 Payments</h3>
-            <p>View pending wages and mark them as paid.</p>
-            <a href="/payments" class="btn btn-outline-success">View Pending</a>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 feature-card p-4">
+            <div class="card-body">
+                <div class="icon-box bg-success bg-opacity-10 text-success">
+                    <i class="fa-solid fa-indian-rupee-sign"></i>
+                </div>
+                <h4 class="card-title fw-bold">Payments</h4>
+                <p class="text-muted">View pending dues and generate digital proof of payment receipts.</p>
+                <a href="/payments" class="btn btn-outline-success w-100 mt-2">View Pending</a>
+            </div>
         </div>
     </div>
 </div>
