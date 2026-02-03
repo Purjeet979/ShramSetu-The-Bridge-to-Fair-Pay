@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Register New Worker</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/add_worker">
+                    <div class="mb-3">
+                        <label class="form-label">Worker Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="Enter full name" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input type="text" name="phone" class="form-control" placeholder="10-digit mobile number">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Worker Type</label>
+                        <select name="worker_type" class="form-select">
+                            <option value="Unskilled">Unskilled Worker (1.5x Overtime)</option>
+                            <option value="Skilled">Skilled Worker (2.0x Overtime)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Hourly Rate (₹)</label>
+                        <input type="number" step="0.01" name="rate" class="form-control" placeholder="e.g. 100" required>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Save to Database</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
