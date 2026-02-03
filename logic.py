@@ -1,6 +1,5 @@
 import database
 
-
 # --- BASE CLASS ---
 class Worker:
     def __init__(self, name, worker_type, hourly_rate):
@@ -22,7 +21,6 @@ class Worker:
             conn.close()
             print(f"Worker {self.name} saved successfully.")
 
-
 # --- CHILD CLASSES (OOP) ---
 class UnskilledWorker(Worker):
     def __init__(self, name, hourly_rate):
@@ -34,7 +32,6 @@ class UnskilledWorker(Worker):
             return (8 * self._hourly_rate) + ((hours_worked - 8) * (self._hourly_rate * 1.5))
         return hours_worked * self._hourly_rate
 
-
 class SkilledWorker(Worker):
     def __init__(self, name, hourly_rate):
         super().__init__(name, "Skilled", hourly_rate)
@@ -44,7 +41,6 @@ class SkilledWorker(Worker):
         if hours_worked > 8:
             return (8 * self._hourly_rate) + ((hours_worked - 8) * (self._hourly_rate * 2.0))
         return hours_worked * self._hourly_rate
-
 
 # --- HELPER FUNCTIONS ---
 def add_work_entry(worker_id, hours_worked):
@@ -71,7 +67,6 @@ def add_work_entry(worker_id, hours_worked):
         conn.close()
         return True
     return False
-
 
 def get_pending_wages():
     conn = database.get_connection()

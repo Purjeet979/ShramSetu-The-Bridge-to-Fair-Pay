@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">Record Daily Work</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/record_work">
+
+                    <div class="mb-3">
+                        <label class="form-label">Select Worker</label>
+                        <select name="worker_id" class="form-select" required>
+                            <option value="" disabled selected>Choose a worker...</option>
+                            {% for worker in workers %}
+                                <option value="{{ worker.worker_id }}">
+                                    ID: {{ worker.worker_id }} - {{ worker.name }} ({{ worker.worker_type }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Hours Worked</label>
+                        <input type="number" step="0.1" name="hours" class="form-control" placeholder="e.g. 8.5" required>
+                        <div class="form-text">Overtime logic applies automatically > 8 hours.</div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-warning">Calculate & Save Wage</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

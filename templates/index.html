@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-white rounded-3 shadow-sm text-center">
+    <h1 class="display-5 fw-bold">Welcome to Shram Setu</h1>
+    <p class="col-md-8 fs-4 mx-auto">Digital Wage Protection System</p>
+    <p class="text-muted">Ensure fair payments, track overtime automatically, and maintain a non-deniable record of work.</p>
+</div>
+
+<div class="row align-items-md-stretch">
+    <div class="col-md-4 mb-3">
+        <div class="h-100 p-4 bg-white border rounded-3 text-center">
+            <h3>👷 Register</h3>
+            <p>Add new skilled or unskilled workers to the database.</p>
+            <a href="/add_worker" class="btn btn-outline-primary">Add Worker</a>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="h-100 p-4 bg-white border rounded-3 text-center">
+            <h3>⏱️ Record Work</h3>
+            <p>Log daily hours. Overtime is calculated automatically.</p>
+            <a href="/record_work" class="btn btn-outline-warning">Log Hours</a>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="h-100 p-4 bg-white border rounded-3 text-center">
+            <h3>💰 Payments</h3>
+            <p>View pending wages and mark them as paid.</p>
+            <a href="/payments" class="btn btn-outline-success">View Pending</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

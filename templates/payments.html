@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h4 class="mb-0">Pending Payments (Unpaid)</h4>
+    </div>
+    <div class="card-body">
+        {% if payments %}
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Entry ID</th>
+                        <th>Worker Name</th>
+                        <th>Date</th>
+                        <th>Calculated Wage</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in payments %}
+                    <tr>
+                        <td>#{{ row[1] }}</td> <td class="fw-bold">{{ row[0] }}</td> <td>{{ row[2] }}</td> <td class="text-success fw-bold">₹{{ row[3] }}</td> <td><span class="badge bg-warning text-dark">Pending</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <div class="alert alert-success text-center">
+                All caught up! No pending payments.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
