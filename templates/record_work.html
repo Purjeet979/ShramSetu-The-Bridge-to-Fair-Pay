@@ -13,12 +13,12 @@
                     <p class="text-muted small">Log hours to calculate wages automatically</p>
                 </div>
 
-                <form method="POST" action="/record_work">
+                <form method="POST" action="/record_work" id="recordWorkForm">
 
                     <div class="mb-4">
                         <label class="form-label fw-bold small text-uppercase text-muted">Select Worker</label>
-                        <select name="worker_id" class="form-select form-select-lg" required>
-                            <option value="" disabled selected>Search or Select Worker...</option>
+                        <select name="worker_id" class="form-select form-select-lg select2-worker" required>
+                            <option value="" disabled selected>Search by name or type...</option>
                             {% for worker in workers %}
                                 <option value="{{ worker.worker_id }}">
                                     {{ worker.name }} ({{ worker.worker_type }})
@@ -48,4 +48,42 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* Fixes Select2 height to match Bootstrap 5 LG inputs */
+    .select2-container--bootstrap-5 .select2-selection {
+        min-height: 52px;
+        padding: 10px;
+        border-radius: 10px;
+    }
+    /* Ensures the dropdown matches your card backgrounds in dark mode */
+    [data-bs-theme="dark"] .select2-dropdown,
+    [data-bs-theme="dark"] .select2-selection {
+        background-color: var(--card-bg) !important;
+        color: var(--dark) !important;
+        border-color: #334155 !important;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        $('.select2-worker').select2({
+            theme: 'bootstrap-5', // Uses the theme link we added in base.html
+            placeholder: "Search by name or type...",
+            allowClear: true,
+            width: '100%'
+        });
+
+        // Re-initialize or adjust Select2 if theme changes (optional)
+        $('#theme-toggle').on('click', function() {
+            // Small delay to allow CSS variables to update
+            setTimeout(() => {
+                $('.select2-worker').select2({
+                    theme: 'bootstrap-5',
+                    width: '100%'
+                });
+            }, 100);
+        });
+    });
+</script>
 {% endblock %}

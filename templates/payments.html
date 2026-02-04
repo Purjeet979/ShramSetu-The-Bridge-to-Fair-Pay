@@ -27,15 +27,31 @@
                 <tbody>
                     {% for row in payments %}
                     <tr>
-                        <td class="ps-4 text-muted">#{{ row[1] }}</td> <td class="fw-bold text-dark">
+                        <td class="ps-4 text-muted">#{{ row[1] }}</td>
+                        <td class="fw-bold text-dark">
                             <div class="d-flex align-items-center">
                                 <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">
                                     {{ row[0][0] }}
                                 </div>
-                                {{ row[0] }}
+                                <div class="d-flex flex-column">
+                                    <span>{{ row[0] }}</span>
+                                    <div>
+                                        {% if row[4] == 'Skilled' %}
+                                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 fw-normal" style="font-size: 0.7rem;">
+                                            <i class="fa-solid fa-star me-1"></i> Skilled
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 fw-normal" style="font-size: 0.7rem;">
+                                            <i class="fa-solid fa-hammer me-1"></i> Unskilled
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
                             </div>
                         </td>
-                        <td class="text-muted">{{ row[2] }}</td> <td class="text-success fw-bold">₹{{ row[3] }}</td> <td><span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill">Pending</span></td>
+                        <td class="text-muted">{{ row[2] }}</td>
+                        <td class="text-success fw-bold">₹{{ row[3] }}</td>
+                        <td><span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill">Pending</span></td>
                         <td class="text-end pe-4">
                             <button class="btn btn-sm btn-success rounded-pill px-3">
                                 Pay Now
