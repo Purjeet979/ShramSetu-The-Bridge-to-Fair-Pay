@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
     .hero-section {
         background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
@@ -24,6 +26,19 @@
         font-size: 1.5rem;
         margin-bottom: 20px;
     }
+    /* NEW: Stat Card Styling */
+    .stat-card {
+        border-radius: 16px;
+        transition: transform 0.3s ease;
+    }
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 </style>
 
 <div class="hero-section text-center text-md-start d-flex align-items-center justify-content-between position-relative overflow-hidden">
@@ -35,6 +50,60 @@
         </a>
     </div>
     <i class="fa-solid fa-shield-halved position-absolute opacity-25" style="font-size: 15rem; right: -20px; top: 10px; color: rgba(255,255,255,0.1);"></i>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card p-3 border-start border-primary border-4 shadow-sm">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon bg-primary bg-opacity-10 text-primary me-3">
+                    <i class="fa-solid fa-users fa-lg"></i>
+                </div>
+                <div>
+                    <p class="text-muted small fw-bold mb-0">TOTAL WORKERS</p>
+                    <h3 class="fw-bold mb-0">{{ stats.total_workers }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card p-3 border-start border-success border-4 shadow-sm">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon bg-success bg-opacity-10 text-success me-3">
+                    <i class="fa-solid fa-indian-rupee-sign fa-lg"></i>
+                </div>
+                <div>
+                    <p class="text-muted small fw-bold mb-0">PENDING WAGES</p>
+                    <h3 class="fw-bold mb-0 text-success">₹{{ "{:,.2f}".format(stats.pending_wages) }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card p-3 border-start border-warning border-4 shadow-sm">
+            <div class="d-flex align-items-center">
+                <div class="stat-icon bg-warning bg-opacity-10 text-warning me-3">
+                    <i class="fa-solid fa-bolt fa-lg"></i>
+                </div>
+                <div>
+                    <p class="text-muted small fw-bold mb-0">HOURS LOGGED TODAY</p>
+                    <h3 class="fw-bold mb-0 text-warning">{{ stats.hours_today }}h</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-5 border-0">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold mb-0"><i class="fa-solid fa-chart-line me-2 text-primary"></i>Weekly Activity Trend</h5>
+            <span class="badge bg-light text-dark border py-2 px-3 rounded-pill small">Last 7 Days</span>
+        </div>
+        <div style="height: 300px;">
+            <canvas id="laborChart"></canvas>
+        </div>
+    </div>
 </div>
 
 <div class="row align-items-stretch">
@@ -77,4 +146,50 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('laborChart').getContext('2d');
+
+        // Define Gradient for the chart
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(37, 99, 235, 0.4)');
+        gradient.addColorStop(1, 'rgba(37, 99, 235, 0)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ chart_data.labels | tojson }},
+                datasets: [{
+                    label: 'Total Hours Worked',
+                    data: {{ chart_data.data_points | tojson }},
+                    borderColor: '#2563eb',
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4, // Smoothing
+                    pointBackgroundColor: '#2563eb',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { borderDash: [5, 5] },
+                        ticks: { callback: value => value + 'h' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

@@ -9,7 +9,9 @@ app.secret_key = "shram_setu_secret_key"  # Needed for flash messages
 # 1. HOME PAGE
 @app.route('/')
 def index():
-    return render_template('index.html')
+    stats = logic.get_dashboard_stats()
+    chart_data = logic.get_chart_data()
+    return render_template('index.html', stats=stats, chart_data=chart_data)
 
 
 # 2. ADD WORKER PAGE
@@ -78,5 +80,5 @@ def payments():
 
 
 if __name__ == '__main__':
-    database.setup_tables()  # Ensure DB tables exist
+    database.setup_tables()
     app.run(debug=True)

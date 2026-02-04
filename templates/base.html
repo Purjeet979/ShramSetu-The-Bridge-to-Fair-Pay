@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,114 +9,169 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
 
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+
     <style>
         :root {
-            --primary: #2563eb;       /* Modern Blue */
-            --secondary: #f59e0b;     /* Amber/Gold for Wages */
-            --dark: #1e293b;          /* Slate Dark */
-            --light: #f8fafc;         /* Background */
+            --primary: #2563eb;
+            --secondary: #f59e0b;
+            --dark: #1e293b;
+            --light: #f8fafc;
             --card-bg: #ffffff;
+            --nav-bg: #ffffff;
+        }
+
+        /* NEW: Dark Mode Palette */
+        [data-bs-theme="dark"] {
+            --light: #0f172a;
+            --card-bg: #1e293b;
+            --dark: #f1f5f9;
+            --nav-bg: #1e293b;
         }
 
         body {
             background-color: var(--light);
             font-family: 'Inter', sans-serif;
             color: var(--dark);
+            overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         h1, h2, h3, h4, h5, .navbar-brand {
             font-family: 'Poppins', sans-serif;
         }
 
-        /* Navbar Styling */
         .navbar {
-            background-color: #ffffff !important;
+            background-color: var(--nav-bg) !important;
             box-shadow: 0 4px 20px rgba(0,0,0,0.05);
             padding: 1rem 0;
+            transition: all 0.3s ease;
         }
+
         .navbar-brand {
             font-weight: 700;
             color: var(--primary) !important;
             font-size: 1.5rem;
             letter-spacing: -0.5px;
         }
+
         .nav-link {
             font-weight: 500;
             color: #64748b !important;
             margin-left: 15px;
-            transition: 0.3s;
+            transition: all 0.3s ease;
+            position: relative;
         }
-        .nav-link:hover, .nav-link.active {
+
+        /* Support for Dark Mode text */
+        [data-bs-theme="dark"] .nav-link {
+            color: #94a3b8 !important;
+        }
+
+        .nav-link:hover, .nav-link.active-tab {
             color: var(--primary) !important;
         }
+
+        .nav-link.active-tab::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            bottom: -5px;
+            left: 0;
+            background-color: var(--primary);
+            border-radius: 2px;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+        }
+
         .btn-nav {
             background-color: var(--primary);
             color: white !important;
             padding: 8px 20px;
             border-radius: 50px;
             box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+            transition: all 0.3s ease;
         }
 
-        /* Card Styling */
+        /* NEW: Button Loading State Class */
+        .btn-loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
         .card {
             border: none;
             border-radius: 16px;
             background: var(--card-bg);
             box-shadow: 0 10px 30px rgba(0,0,0,0.04);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-            overflow: hidden;
         }
 
-        /* Form Inputs */
         .form-control, .form-select {
             border-radius: 10px;
             border: 1px solid #e2e8f0;
             padding: 12px 15px;
-            font-size: 0.95rem;
-        }
-        .form-control:focus, .form-select:focus {
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
-            border-color: var(--primary);
+            background-color: var(--card-bg);
+            color: var(--dark);
         }
 
-        /* Buttons */
-        .btn-primary {
-            background-color: var(--primary);
-            border: none;
-            padding: 12px 24px;
-            border-radius: 10px;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-            transition: 0.3s;
-        }
-        .btn-primary:hover {
-            background-color: #1d4ed8;
-            transform: translateY(-2px);
+        [data-bs-theme="dark"] .form-control, [data-bs-theme="dark"] .form-select {
+            border-color: #334155;
         }
 
-        /* Alerts */
-        .alert {
-            border-radius: 12px;
-            border: none;
+        /* Page Transition Animation */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .page-animate {
+            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* NEW: Theme Toggle Button Style */
+        #theme-toggle {
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+        #theme-toggle:hover {
+            background: rgba(0,0,0,0.05);
+        }
+        [data-bs-theme="dark"] #theme-toggle:hover {
+            background: rgba(255,255,255,0.1);
         }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-light fixed-top">
+<nav class="navbar navbar-expand-lg fixed-top">
   <div class="container">
     <a class="navbar-brand" href="/">
         <i class="fa-solid fa-bridge-water me-2"></i>SHRAM SETU
     </a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+
+    <div class="d-flex align-items-center order-lg-3">
+        <div id="theme-toggle" class="me-2 text-muted">
+            <i class="fa-solid fa-moon fs-5" id="theme-icon"></i>
+        </div>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto align-items-center">
-        <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
-        <li class="nav-item"><a class="nav-link" href="/record_work">Record Work</a></li>
-        <li class="nav-item"><a class="nav-link" href="/payments">History</a></li>
-        <li class="nav-item ms-2">
+        <li class="nav-item"><a id="nav-home" class="nav-link" href="/">Dashboard</a></li>
+        <li class="nav-item"><a id="nav-record" class="nav-link" href="/record_work">Record Work</a></li>
+        <li class="nav-item"><a id="nav-pay" class="nav-link" href="/payments">History</a></li>
+        <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
             <a class="nav-link btn-nav" href="/add_worker"><i class="fa-solid fa-plus me-1"></i> Add Worker</a>
         </li>
       </ul>
@@ -124,18 +179,26 @@
   </div>
 </nav>
 
-<div class="container" style="padding-top: 100px; padding-bottom: 50px;">
+<div class="container page-animate" style="padding-top: 120px; padding-bottom: 50px;">
 
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <div class="row justify-content-center mb-4">
-            <div class="col-md-8">
+            <div class="col-md-8 text-center">
                 {% for category, message in messages %}
                   <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show shadow-sm" role="alert">
                     <i class="fa-solid {{ 'fa-circle-check' if category == 'success' else 'fa-circle-exclamation' }} me-2"></i>
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                   </div>
+
+                  {% if category == 'success' %}
+                  <script>
+                      window.addEventListener('load', () => {
+                          confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                      });
+                  </script>
+                  {% endif %}
                 {% endfor %}
             </div>
         </div>
@@ -145,6 +208,61 @@
     {% block content %}{% endblock %}
 </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<script>
+    // 1. ACTIVE TAB LOGIC (Your Original Feature)
+    const path = window.location.pathname;
+    if (path === '/') {
+        document.getElementById('nav-home')?.classList.add('active-tab');
+    } else if (path.includes('record_work')) {
+        document.getElementById('nav-record')?.classList.add('active-tab');
+    } else if (path.includes('payments')) {
+        document.getElementById('nav-pay')?.classList.add('active-tab');
+    }
+
+    // 2. NEW: DARK MODE LOGIC
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    const htmlElement = document.documentElement;
+
+    // Check for saved preference
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    htmlElement.setAttribute('data-bs-theme', savedTheme);
+    updateIcon(savedTheme);
+
+    themeToggle.addEventListener('click', () => {
+        const currentTheme = htmlElement.getAttribute('data-bs-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+        htmlElement.setAttribute('data-bs-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateIcon(newTheme);
+    });
+
+    function updateIcon(theme) {
+        if (theme === 'dark') {
+            themeIcon.classList.replace('fa-moon', 'fa-sun');
+        } else {
+            themeIcon.classList.replace('fa-sun', 'fa-moon');
+        }
+    }
+
+    // 3. NEW: GLOBAL FORM LOADING FEEDBACK
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function() {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.classList.add('btn-loading');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-2"></i> Processing...`;
+            }
+        });
+    });
+</script>
+
 </body>
 </html>

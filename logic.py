@@ -73,8 +73,49 @@ def get_pending_wages():
     result = []
     if conn:
         cursor = conn.cursor()
-        sql = "SELECT w.name, e.entry_id, e.work_date, e.wage_calculated FROM work_entries e JOIN workers w ON e.worker_id = w.worker_id WHERE e.status = 'Pending'"
+        sql = """
+                    SELECT w.name, e.entry_id, e.work_date, e.wage_calculated, w.worker_type 
+                    FROM work_entries e 
+                    JOIN workers w ON e.worker_id = w.worker_id 
+                    WHERE e.status = 'Pending'
+                """
         cursor.execute(sql)
         result = cursor.fetchall()
         conn.close()
     return result
+
+def get_dashboard_stats():
+    conn = database.get_connection()
+    stats = {"total_workers": 0, "pending_wages": 0, "hours_today": 0}
+    if conn:
+        cursor = conn.cursor()
+        # Total Workers
+        cursor.execute("SELECT COUNT(*) FROM workers")
+        stats["total_workers"] = cursor.fetchone()[0]
+        # Total Pending Wages
+        cursor.execute("SELECT SUM(wage_calculated) FROM work_entries WHERE status = 'Pending'")
+        stats["pending_wages"] = cursor.fetchone()[0] or 0
+        # Hours Logged Today
+        cursor.execute("SELECT SUM(hours_worked) FROM work_entries WHERE work_date = CURDATE()")
+        stats["hours_today"] = cursor.fetchone()[0] or 0
+        conn.close()
+    return stats
+
+def get_chart_data():
+    conn = database.get_connection()
+    # Change 'values' to 'data_points' to avoid conflict with dict.values()
+    data = {"labels": [], "data_points": []}
+    if conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT work_date, SUM(hours_worked) 
+            FROM work_entries 
+            WHERE work_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+            GROUP BY work_date ORDER BY work_date ASC
+        """)
+        rows = cursor.fetchall()
+        for row in rows:
+            data["labels"].append(row[0].strftime("%b %d"))
+            data["data_points"].append(float(row[1])) # Update this line too
+        conn.close()
+    return data
