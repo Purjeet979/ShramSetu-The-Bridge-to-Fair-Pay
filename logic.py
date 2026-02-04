@@ -119,3 +119,24 @@ def get_chart_data():
             data["data_points"].append(float(row[1])) # Update this line too
         conn.close()
     return data
+
+def get_composition_data():
+    conn = database.get_connection()
+    data = {"labels": ["Skilled", "Unskilled"], "counts": [0, 0]}
+    if conn:
+        cursor = conn.cursor()
+        # Fetch sum of wages grouped by worker type
+        cursor.execute("""
+            SELECT w.worker_type, SUM(e.wage_calculated) 
+            FROM work_entries e 
+            JOIN workers w ON e.worker_id = w.worker_id 
+            GROUP BY w.worker_type
+        """)
+        rows = cursor.fetchall()
+        for row in rows:
+            if row[0] == "Skilled":
+                data["counts"][0] = float(row[1])
+            elif row[0] == "Unskilled":
+                data["counts"][1] = float(row[1])
+        conn.close()
+    return data
