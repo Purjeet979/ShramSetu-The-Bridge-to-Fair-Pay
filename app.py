@@ -9,11 +9,16 @@ app.secret_key = "shram_setu_secret_key"  # Needed for flash messages
 # 1. HOME PAGE
 @app.route('/')
 def index():
+    # Fetch all required data for the dashboard
     stats = logic.get_dashboard_stats()
     chart_data = logic.get_chart_data()
-    return render_template('index.html', stats=stats, chart_data=chart_data)
+    comp_data = logic.get_composition_data()
 
-
+    # Pass comp_data to the template
+    return render_template('index.html',
+                           stats=stats,
+                           chart_data=chart_data,
+                           comp_data=comp_data)
 # 2. ADD WORKER PAGE
 @app.route('/add_worker', methods=['GET', 'POST'])
 def add_worker():
