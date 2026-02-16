@@ -8,35 +8,51 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
-
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
     <style>
         :root {
-            --primary: #2563eb;
-            --secondary: #f59e0b;
-            --dark: #1e293b;
-            --light: #f8fafc;
-            --card-bg: #ffffff;
-            --nav-bg: #ffffff;
-        }
+        --primary: #2563eb;
+        --secondary: #f59e0b;
+        --dark: #1e293b;
+        /* Thoda zyada visible gradient */
+        --light: linear-gradient(180deg, #ffffff 0%, #dbeafe 100%);
+        --card-bg: #ffffff;
+        --nav-bg: #ffffff;
+    }
 
-        /* NEW: Dark Mode Palette */
-        [data-bs-theme="dark"] {
-            --light: #0f172a;
-            --card-bg: #1e293b;
-            --dark: #f1f5f9;
-            --nav-bg: #1e293b;
-        }
+    [data-bs-theme="dark"] {
+        /* Dark mode mein bhi contrast badha diya */
+        --light: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+        --card-bg: #1e293b;
+        --dark: #f1f5f9;
+        --nav-bg: #1e293b;
+    }
 
-        body {
-            background-color: var(--light);
-            font-family: 'Inter', sans-serif;
-            color: var(--dark);
-            overflow-x: hidden;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
+    body {
+        background: var(--light) !important; /* !important lagaya taaki override na ho */
+        background-attachment: fixed;
+        font-family: 'Inter', sans-serif;
+        color: var(--dark);
+        min-height: 100vh;
+        margin: 0;
+        transition: all 0.3s ease;
+    }
+
+    /* Isse top-right mein blue glow saaf dikhega */
+    body::before {
+        content: "";
+        position: fixed;
+        top: -100px;
+        right: -100px;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, transparent 70%);
+        pointer-events: none;
+        z-index: -1;
+    }
 
         h1, h2, h3, h4, h5, .navbar-brand {
             font-family: 'Poppins', sans-serif;
@@ -152,8 +168,12 @@
 
 <nav class="navbar navbar-expand-lg fixed-top">
   <div class="container">
-    <a class="navbar-brand" href="/">
-        <i class="fa-solid fa-bridge-water me-2"></i>SHRAM SETU
+    <a class="navbar-brand d-flex align-items-center" href="/">
+        <img src="{{ url_for('static', filename='images/logo.png') }}"
+         alt="Shram Setu Logo"
+         height="40"
+         class="d-inline-block align-top me-2">
+        <span>SHRAM SETU</span>
     </a>
 
     <div class="d-flex align-items-center order-lg-3">
@@ -263,6 +283,12 @@
         });
     });
 </script>
-
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+  AOS.init({
+    duration: 800, // Animation kitni der chalegi (ms)
+    once: true,    // Kya animation sirf ek baar honi chahiye
+  });
+</script>
 </body>
 </html>
