@@ -103,20 +103,20 @@ def get_dashboard_stats():
 
 def get_chart_data():
     conn = database.get_connection()
-    # Change 'values' to 'data_points' to avoid conflict with dict.values()
     data = {"labels": [], "data_points": []}
     if conn:
         cursor = conn.cursor()
+        # Pichle 30 dinon ka data fetch karne ke liye INTERVAL badal diya
         cursor.execute("""
             SELECT work_date, SUM(hours_worked) 
             FROM work_entries 
-            WHERE work_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+            WHERE work_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
             GROUP BY work_date ORDER BY work_date ASC
         """)
         rows = cursor.fetchall()
         for row in rows:
             data["labels"].append(row[0].strftime("%b %d"))
-            data["data_points"].append(float(row[1])) # Update this line too
+            data["data_points"].append(float(row[1]))
         conn.close()
     return data
 
