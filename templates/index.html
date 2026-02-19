@@ -67,6 +67,8 @@
             </div>
         </div>
     </div>
+
+    {% if session['user_role'] == 'Admin' %}
     <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
         <div class="card stat-card p-3 border-start border-success border-4 shadow-sm">
             <div class="d-flex align-items-center">
@@ -80,6 +82,8 @@
             </div>
         </div>
     </div>
+    {% endif %}
+
     <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
         <div class="card stat-card p-3 border-start border-warning border-4 shadow-sm">
             <div class="d-flex align-items-center">
@@ -118,6 +122,8 @@
 </div>
 
 <div class="row align-items-stretch">
+
+    {% if session['user_role'] == 'Admin' %}
     <div class="col-md-4 mb-4" data-aos="zoom-in" data-aos-delay="100">
         <div class="card h-100 feature-card p-4 border-primary border-top border-4">
             <div class="card-body">
@@ -130,6 +136,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     <div class="col-md-4 mb-4" data-aos="zoom-in" data-aos-delay="200">
         <div class="card h-100 feature-card p-4 border-warning border-top border-4">
@@ -144,6 +151,7 @@
         </div>
     </div>
 
+    {% if session['user_role'] == 'Admin' %}
     <div class="col-md-4 mb-4" data-aos="zoom-in" data-aos-delay="300">
         <div class="card h-100 feature-card p-4 border-success border-top border-4">
             <div class="card-body">
@@ -156,6 +164,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>

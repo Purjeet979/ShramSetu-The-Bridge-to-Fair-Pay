@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container page-animate">
+    <h2 class="fw-bold mb-4"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>Work History</h2>
+
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr class="small fw-bold text-muted text-uppercase">
+                        <th class="ps-4">Date</th>
+                        {% if session['user_role'] != 'Worker' %} <th>Worker</th> {% endif %}
+                        <th>Hours</th>
+                        <th>Wage</th>
+                        <th>Approval</th>
+                        <th class="pe-4">Admin Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in history %}
+                    <tr>
+                        <td class="ps-4">{{ item.work_date }}</td>
+                        {% if session['user_role'] != 'Worker' %} <td class="fw-bold">{{ item.name }}</td> {% endif %}
+                        <td><span class="badge bg-light text-dark border">{{ item.hours_worked }}h</span></td>
+                        <td class="text-primary fw-bold">₹{{ item.wage_calculated }}</td>
+                        <td>
+                            {% if item.approval_status == 'Approved' %}
+                                <span class="badge bg-success-subtle text-success">Approved</span>
+                            {% elif item.approval_status == 'Rejected' %}
+                                <span class="badge bg-danger-subtle text-danger">Rejected</span>
+                            {% else %}
+                                <span class="badge bg-warning-subtle text-warning">Pending Review</span>
+                            {% endif %}
+                        </td>
+                        <td class="pe-4">
+                            {% if item.admin_remark %}
+                                <small class="text-muted italic">"{{ item.admin_remark }}"</small>
+                            {% else %}
+                                <span class="text-muted">--</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">No history found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

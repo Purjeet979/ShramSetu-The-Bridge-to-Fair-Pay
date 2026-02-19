@@ -10,7 +10,7 @@ DB_CONFIG = {
 
 
 def get_connection():
-    """Connects to the specific database and returns the connection object."""
+
     try:
         conn = mysql.connector.connect(**DB_CONFIG)
         return conn
@@ -20,23 +20,33 @@ def get_connection():
 
 
 def setup_tables():
-    """Creates the necessary tables if they don't exist."""
     conn = get_connection()
     if conn:
         cursor = conn.cursor()
 
-        # 1. Create Workers Table
+        # 1. New Users Table (Hierarchy: Admin, Supervisor, Worker handle karne ke liye)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            user_id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            identifier VARCHAR(100) UNIQUE NOT NULL, -- Email (Admin/Sup) ya Phone (Worker)
+            password_hash VARCHAR(255) NOT NULL,
+            role ENUM('Admin', 'Supervisor', 'Worker') NOT NULL
+        )
+        """)
+
+        # 2. Workers Table
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS workers (
             worker_id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(100) NOT NULL,
             worker_type ENUM('Unskilled', 'Skilled') NOT NULL,
             wage_rate DECIMAL(10, 2) NOT NULL,
-            phone VARCHAR(15)
+            phone VARCHAR(15) UNIQUE
         )
         """)
 
-        # 2. Create Work Entries Table (The "No Denial" Record)
+        # 3. Work Entries Table (Updated with Approval Logic and Remarks)
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS work_entries (
             entry_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -45,11 +55,13 @@ def setup_tables():
             hours_worked DECIMAL(4, 1) NOT NULL,
             wage_calculated DECIMAL(10, 2),
             status ENUM('Pending', 'Paid') DEFAULT 'Pending',
+            approval_status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+            admin_remark TEXT, -- Admin rejection ka reason yahan likhega
             FOREIGN KEY (worker_id) REFERENCES workers(worker_id)
         )
         """)
 
-        # 3. Create Payments Table (The "Proof")
+        # 4. Payments Table
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS payments (
             payment_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -61,9 +73,8 @@ def setup_tables():
         )
         """)
 
-        print("✅ SUCCESS: All tables (Workers, Entries, Payments) are ready!")
+        print("✅ SUCCESS: All tables (Users, Workers, Entries, Payments) are updated and ready!")
         conn.close()
-
 
 if __name__ == "__main__":
     setup_tables()
