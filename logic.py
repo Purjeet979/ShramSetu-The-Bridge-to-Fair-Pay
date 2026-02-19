@@ -1,5 +1,33 @@
 import database
 
+class User:
+    def __init__(self, name, identifier, role):
+        self.name = name
+        self.identifier = identifier  # Email ya Phone
+        self.role = role
+
+
+class Admin(User):
+    def __init__(self, name, identifier):
+        super().__init__(name, identifier, 'Admin')
+
+
+    def update_entry_status(self, entry_id, status, remark):
+        conn = database.get_connection()
+        if conn:
+            cursor = conn.cursor()
+            sql = "UPDATE work_entries SET approval_status = %s, admin_remark = %s WHERE entry_id = %s"
+            cursor.execute(sql, (status, remark, entry_id))
+            conn.commit()
+            conn.close()
+            return True
+        return False
+
+
+class Supervisor(User):
+    def __init__(self, name, identifier):
+        super().__init__(name, identifier, 'Supervisor')
+
 # --- BASE CLASS ---
 class Worker:
     def __init__(self, name, worker_type, hourly_rate):
@@ -140,3 +168,48 @@ def get_composition_data():
                 data["counts"][1] = float(row[1])
         conn.close()
     return data
+
+
+def get_worker_stats(identifier):
+    """
+    Fetches stats specifically for the logged-in worker using their phone number (identifier).
+    """
+    conn = database.get_connection()
+    stats = {"total_pending": 0, "total_paid": 0}
+    entries = []
+
+    if conn:
+        # 1. Fetch Stats (Using Tuple Cursor for simple SUMs)
+        cursor = conn.cursor()
+
+        # Get Worker ID from Phone
+        cursor.execute("SELECT worker_id FROM workers WHERE phone = %s", (identifier,))
+        worker_row = cursor.fetchone()
+
+        if worker_row:
+            worker_id = worker_row[0]
+
+            # Calculate Total Pending
+            cursor.execute("SELECT SUM(wage_calculated) FROM work_entries WHERE worker_id = %s AND status = 'Pending'",
+                           (worker_id,))
+            stats["total_pending"] = cursor.fetchone()[0] or 0
+
+            # Calculate Total Paid
+            cursor.execute("SELECT SUM(wage_calculated) FROM work_entries WHERE worker_id = %s AND status = 'Paid'",
+                           (worker_id,))
+            stats["total_paid"] = cursor.fetchone()[0] or 0
+
+            cursor.close()
+
+            # 2. Fetch Recent Entries (Using Dictionary Cursor for easy template rendering)
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("""
+                SELECT * FROM work_entries 
+                WHERE worker_id = %s 
+                ORDER BY work_date DESC LIMIT 10
+            """, (worker_id,))
+            entries = cursor.fetchall()
+
+        conn.close()
+
+    return stats, entries

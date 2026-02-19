@@ -187,15 +187,40 @@
     </div>
 
     <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto align-items-center">
-        <li class="nav-item"><a id="nav-home" class="nav-link" href="/">Dashboard</a></li>
-        <li class="nav-item"><a id="nav-record" class="nav-link" href="/record_work">Record Work</a></li>
-        <li class="nav-item"><a id="nav-pay" class="nav-link" href="/payments">History</a></li>
-        <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
-            <a class="nav-link btn-nav" href="/add_worker"><i class="fa-solid fa-plus me-1"></i> Add Worker</a>
+    <ul class="navbar-nav ms-auto align-items-center">
+    {% if session['user_id'] %}
+
+        <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+
+        {% if session['user_role'] == 'Admin' %}
+            <li class="nav-item"><a class="nav-link" href="/add_worker">Add Worker</a></li>
+        {% endif %}
+
+        {% if session['user_role'] in ['Admin', 'Supervisor'] %}
+            <li class="nav-item"><a class="nav-link" href="/record_work">Record Work</a></li>
+        {% endif %}
+
+        {% if session['user_role'] == 'Admin' %}
+            <li class="nav-item"><a class="nav-link" href="/admin/approve_logs">Approvals</a></li>
+            <li class="nav-item"><a class="nav-link" href="/payments">Payments</a></li>
+        {% endif %}
+
+        <li class="nav-item"><a class="nav-link" href="/history">History</a></li>
+
+        <li class="nav-item ms-lg-3 dropdown">
+            <a class="nav-link dropdown-toggle fw-bold text-primary d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                <i class="fa-solid fa-circle-user me-1"></i> {{ session['user_name'] }}
+                <span class="badge bg-secondary-subtle text-secondary ms-2" style="font-size: 0.65rem;">{{ session['user_role'] }}</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                <li><a class="dropdown-item text-danger" href="/logout"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
+            </ul>
         </li>
-      </ul>
-    </div>
+    {% else %}
+        <li class="nav-item"><a class="nav-link btn-nav" href="/login">Login</a></li>
+    {% endif %}
+</ul>
+</div>
   </div>
 </nav>
 

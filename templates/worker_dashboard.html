@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container page-animate">
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="card bg-primary text-white p-4 border-0 shadow">
+                <small class="opacity-75 text-uppercase fw-bold">Total Pending Wages</small>
+                <h2 class="display-5 fw-bold">₹{{ "{:,.2f}".format(stats.total_pending) }}</h2>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-success text-white p-4 border-0 shadow">
+                <small class="opacity-75 text-uppercase fw-bold">Total Paid to Date</small>
+                <h2 class="display-5 fw-bold">₹{{ "{:,.2f}".format(stats.total_paid) }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="fw-bold mb-4">My Work Records</h3>
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="bg-light">
+                    <tr class="small fw-bold text-muted">
+                        <th class="ps-4">Date</th>
+                        <th>Hours</th>
+                        <th>Amount</th>
+                        <th>Approval</th>
+                        <th>Status</th>
+                        <th class="pe-4">Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in entries %}
+                    <tr>
+                        <td class="ps-4">{{ entry.work_date }}</td>
+                        <td>{{ entry.hours_worked }}h</td>
+                        <td class="fw-bold">₹{{ entry.wage_calculated }}</td>
+                        <td>
+                            {% if entry.approval_status == 'Approved' %}
+                                <span class="badge bg-success-subtle text-success">Approved</span>
+                            {% elif entry.approval_status == 'Rejected' %}
+                                <span class="badge bg-danger-subtle text-danger">Rejected</span>
+                            {% else %}
+                                <span class="badge bg-warning-subtle text-warning">In Review</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge {{ 'bg-success' if entry.status == 'Paid' else 'bg-secondary' }}">
+                                {{ entry.status }}
+                            </span>
+                        </td>
+                        <td class="pe-4">
+                            {% if entry.admin_remark %}
+                                <div class="p-2 small bg-light rounded border-start border-3 {{ 'border-danger' if entry.approval_status == 'Rejected' else 'border-primary' }}">
+                                    <strong>Admin:</strong> {{ entry.admin_remark }}
+                                </div>
+                            {% else %}
+                                <span class="text-muted small">No notes</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
