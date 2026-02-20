@@ -114,6 +114,31 @@ def verify_entry(entry_id):
 
     return redirect(url_for('approve_logs'))
 
+
+@app.route('/add_supervisor', methods=['GET', 'POST'])
+@login_required
+def add_supervisor():
+    # RBAC: Sirf Admin hi Supervisor add kar sakta hai
+    if session.get('user_role') != 'Admin':
+        flash("🚫 Access Denied: Only Admins can add Supervisors.", "danger")
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        name = request.form['name']
+        username = request.form['username']
+        password = request.form['password']
+
+        success, message = logic.add_supervisor_to_db(name, username, password)
+
+        if success:
+            flash(f"✅ Success: Supervisor {name} created!", "success")
+            return redirect(url_for('add_supervisor'))
+        else:
+            flash(f"❌ Error: {message}", "error")
+
+    return render_template('add_supervisor.html')
+
+
 # 2. ADD WORKER PAGE
 @app.route('/add_worker', methods=['GET', 'POST'])
 @login_required

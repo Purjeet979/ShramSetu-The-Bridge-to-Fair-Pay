@@ -193,7 +193,15 @@
         <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
 
         {% if session['user_role'] == 'Admin' %}
-            <li class="nav-item"><a class="nav-link" href="/add_worker">Add Worker</a></li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                    <i class="fa-solid fa-plus me-1"></i> Register
+                </a>
+                <ul class="dropdown-menu border-0 shadow-sm mt-2">
+                    <li><a class="dropdown-item py-2" href="/add_worker"><i class="fa-solid fa-helmet-safety me-2 text-warning"></i>Worker</a></li>
+                    <li><a class="dropdown-item py-2" href="/add_supervisor"><i class="fa-solid fa-user-tie me-2 text-primary"></i>Supervisor</a></li>
+                </ul>
+            </li>
         {% endif %}
 
         {% if session['user_role'] in ['Admin', 'Supervisor'] %}
