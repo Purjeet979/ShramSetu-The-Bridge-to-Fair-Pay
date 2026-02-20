@@ -1,4 +1,5 @@
 import database
+import mysql.connector
 
 class User:
     def __init__(self, name, identifier, role):
@@ -213,3 +214,22 @@ def get_worker_stats(identifier):
         conn.close()
 
     return stats, entries
+
+def add_supervisor_to_db(name, username, password):
+    conn = database.get_connection()
+    if conn:
+        cursor = conn.cursor()
+        try:
+            # Note: Abhi hum plain password save kar rahe hain jaise admin ka kiya tha.
+            sql = "INSERT INTO users (name, identifier, password_hash, role) VALUES (%s, %s, %s, 'Supervisor')"
+            cursor.execute(sql, (name, username, password))
+            conn.commit()
+            return True, "Supervisor added successfully."
+        except mysql.connector.IntegrityError:
+            # Agar username pehle se exist karta hai
+            return False, "This Username/Email is already taken!"
+        except Exception as e:
+            return False, str(e)
+        finally:
+            conn.close()
+    return False, "Database connection failed."

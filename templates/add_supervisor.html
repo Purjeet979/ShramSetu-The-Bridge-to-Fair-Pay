@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-5 col-md-8">
+        <div class="card p-4 border-primary border-top border-4">
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-circle mb-3" style="width: 50px; height: 50px;">
+                        <i class="fa-solid fa-user-tie fs-4"></i>
+                    </div>
+                    <h3 class="fw-bold">New Supervisor</h3>
+                    <p class="text-muted small">Create credentials for a new site manager.</p>
+                </div>
+
+                <form method="POST" action="/add_supervisor">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Full Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. Ravi Sharma" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Username / Email</label>
+                        <input type="text" name="username" class="form-control" placeholder="ravi_sup or ravi@shram.com" required>
+                        <div class="form-text small text-muted">Supervisor will use this to log in.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Temporary Password</label>
+                        <input type="text" name="password" class="form-control" placeholder="Create a secure password" required>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                            <i class="fa-solid fa-user-plus me-2"></i>Create Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="text-center mt-3">
+            <a href="/" class="text-decoration-none text-muted small"><i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,55 +1,53 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container page-animate">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold"><i class="fa-solid fa-user-check text-primary me-2"></i>Review Work Logs</h2>
-        <span class="badge bg-primary rounded-pill px-3 py-2">{{ logs|length }} Pending Reviews</span>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold"><i class="fa-solid fa-user-check text-primary me-2"></i>Review Work Logs</h2>
+    <span class="badge bg-primary rounded-pill px-3 py-2">{{ logs|length }} Pending Reviews</span>
+</div>
 
-    <div class="card shadow-sm border-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light">
-                    <tr class="small fw-bold text-muted text-uppercase">
-                        <th class="ps-4">Worker</th>
-                        <th>Date</th>
-                        <th>Hours</th>
-                        <th>Calculated Wage</th>
-                        <th class="text-end pe-4">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for log in logs %}
-                    <tr>
-                        <td class="ps-4">
-                            <div class="fw-bold">{{ log.worker_name }}</div>
-                            <small class="text-muted">{{ log.worker_type }}</small>
-                        </td>
-                        <td>{{ log.work_date }}</td>
-                        <td><span class="badge bg-light text-dark border">{{ log.hours_worked }}h</span></td>
-                        <td class="text-primary fw-bold">₹{{ log.wage_calculated }}</td>
-                        <td class="text-end pe-4">
-                            <form action="/admin/verify_entry/{{ log.entry_id }}" method="POST" class="d-inline">
-                                <input type="hidden" name="action" value="Approved">
-                                <input type="hidden" name="remark" value="Work Verified">
-                                <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">Approve</button>
-                            </form>
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr class="small fw-bold text-muted text-uppercase">
+                    <th class="ps-4">Worker</th>
+                    <th>Date</th>
+                    <th>Hours</th>
+                    <th>Calculated Wage</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td class="ps-4">
+                        <div class="fw-bold">{{ log.worker_name }}</div>
+                        <small class="text-muted">{{ log.worker_type }}</small>
+                    </td>
+                    <td>{{ log.work_date }}</td>
+                    <td><span class="badge bg-light text-dark border">{{ log.hours_worked }}h</span></td>
+                    <td class="text-primary fw-bold">₹{{ log.wage_calculated }}</td>
+                    <td class="text-end pe-4">
+                        <form action="/admin/verify_entry/{{ log.entry_id }}" method="POST" class="d-inline">
+                            <input type="hidden" name="action" value="Approved">
+                            <input type="hidden" name="remark" value="Work Verified">
+                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">Approve</button>
+                        </form>
 
-                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3"
-                                    data-bs-toggle="modal" data-bs-target="#rejectModal{{ log.entry_id }}">
-                                Reject
-                            </button>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">No pending logs found for review.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                                data-bs-toggle="modal" data-bs-target="#rejectModal{{ log.entry_id }}">
+                            Reject
+                        </button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">No pending logs found for review.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -77,4 +75,14 @@
 </div>
 {% endfor %}
 
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Yeh code saare modals ko animation wale dibbe se nikal kar body ke end mein daal dega
+        // Jisse backdrop aur z-index ka issue solve ho jayega!
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(function(modal) {
+            document.body.appendChild(modal);
+        });
+    });
+</script>
 {% endblock %}
