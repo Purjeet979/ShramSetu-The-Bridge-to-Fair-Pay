@@ -1,5 +1,7 @@
 import database
 import mysql.connector
+import requests
+import random
 
 class User:
     def __init__(self, name, identifier, role):
@@ -233,3 +235,41 @@ def add_supervisor_to_db(name, username, password):
         finally:
             conn.close()
     return False, "Database connection failed."
+
+
+def send_real_otp(phone_number, otp):
+    """
+    Fast2SMS API ka use karke real SMS OTP bhejta hai.
+    """
+
+    API_KEY = "YOUR_FAST2SMS_API_KEY_HERE"
+
+    url = "https://www.fast2sms.com/dev/bulkV2"
+
+    querystring = {
+        "authorization": API_KEY,
+        "variables_values": str(otp),
+        "route": "otp",
+        "numbers": phone_number
+    }
+
+    headers = {
+        'cache-control': "no-cache"
+    }
+
+    try:
+        if API_KEY == "YOUR_FAST2SMS_API_KEY_HERE":
+            print("⚠️ API Key is missing. Skipping real SMS.")
+            return True
+
+        response = requests.request("GET", url, headers=headers, params=querystring)
+        result = response.json()
+
+        if result.get('return'):
+            return True
+        else:
+            print(f"SMS Error: {result.get('message')}")
+            return False
+    except Exception as e:
+        print(f"Fast2SMS API Error: {e}")
+        return False

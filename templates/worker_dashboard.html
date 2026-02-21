@@ -53,9 +53,9 @@
                         </td>
                         <td class="pe-4">
                             {% if entry.admin_remark %}
-                                <div class="p-2 small bg-light rounded border-start border-3 {{ 'border-danger' if entry.approval_status == 'Rejected' else 'border-primary' }}">
-                                    <strong>Admin:</strong> {{ entry.admin_remark }}
-                                </div>
+                                <div class="p-2 small bg-secondary bg-opacity-10 rounded border-start border-3 {{ 'border-danger' if entry.approval_status == 'Rejected' else 'border-primary' }}">
+    <strong>Admin:</strong> <span class="text-body">{{ entry.admin_remark }}</span>
+</div>
                             {% else %}
                                 <span class="text-muted small">No notes</span>
                             {% endif %}
