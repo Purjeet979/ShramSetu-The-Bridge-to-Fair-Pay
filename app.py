@@ -1,8 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 import database
 import logic
+import random
+
 from flask import session
 from functools import wraps
+
 app = Flask(__name__)
 app.secret_key = "shram_setu_secret_key"  # Needed for flash messages
 
@@ -42,6 +45,76 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
+@app.route('/worker_login', methods=['GET', 'POST'])
+def worker_login():
+    if request.method == 'POST':
+        phone = request.form['phone']
+
+        # 1. Check if worker exists in database
+        conn = database.get_connection()
+        if conn:
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM workers WHERE phone = %s", (phone,))
+            worker = cursor.fetchone()
+            conn.close()
+
+            if worker:
+                # 2. Generate 4-digit OTP
+                otp = random.randint(1000, 9999)
+
+                # 3. Save OTP and Phone in session temporarily
+                session['temp_otp'] = str(otp)
+                session['temp_phone'] = phone
+
+                # 4. Print in console (Development ke liye easy testing)
+                print(f"🔔 [DEBUG] OTP for {phone} is: {otp}")
+
+                # 5. Send Real SMS
+                logic.send_real_otp(phone, otp)
+
+                flash("OTP sent successfully to your phone!", "success")
+                return redirect(url_for('verify_otp'))
+            else:
+                flash("Phone number not found. Ask Admin to register you.", "error")
+
+    return render_template('worker_login.html')
+
+
+@app.route('/verify_otp', methods=['GET', 'POST'])
+def verify_otp():
+    # Agar phone number session mein nahi hai, toh wapas bhej do
+    if 'temp_phone' not in session:
+        return redirect(url_for('worker_login'))
+
+    if request.method == 'POST':
+        entered_otp = request.form['otp']
+        saved_otp = session.get('temp_otp')
+
+        if entered_otp == saved_otp:
+            phone = session.get('temp_phone')
+
+            # Fetch worker details for login session
+            conn = database.get_connection()
+            if conn:
+                cursor = conn.cursor(dictionary=True)
+                cursor.execute("SELECT * FROM workers WHERE phone = %s", (phone,))
+                worker = cursor.fetchone()
+                conn.close()
+
+                # Set official session variables
+                session.clear()  # Clear temp stuff
+                session['user_id'] = worker['worker_id']
+                session['user_role'] = 'Worker'
+                session['user_name'] = worker['name']
+                session['identifier'] = worker['phone']
+
+                flash(f"Login Successful! Welcome {worker['name']}.", "success")
+                return redirect(url_for('index'))
+        else:
+            flash("Invalid OTP. Please try again.", "error")
+
+    return render_template('verify_otp.html')
 
 @app.route('/logout')
 def logout():
