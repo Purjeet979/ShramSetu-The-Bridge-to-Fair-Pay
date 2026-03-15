@@ -14,7 +14,7 @@
         {% if payments %}
         <div class="table-responsive rounded-3">
             <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light text-secondary">
+                <thead style="background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(10px);" class="text-secondary">
                     <tr class="text-uppercase small fw-bold">
                         <th class="ps-4 py-3">ID</th>
                         <th class="py-3">Worker Name</th>
@@ -37,11 +37,11 @@
                                     <span>{{ row[0] }}</span>
                                     <div>
                                         {% if row[4] == 'Skilled' %}
-                                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 fw-normal" style="font-size: 0.7rem;">
+                                        <span class="badge text-info border border-info border-opacity-25 fw-normal" style="font-size: 0.7rem; background: rgba(14, 165, 233, 0.1);">
                                             <i class="fa-solid fa-star me-1"></i> Skilled
                                         </span>
                                         {% else %}
-                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 fw-normal" style="font-size: 0.7rem;">
+                                        <span class="badge text-secondary border border-secondary border-opacity-25 fw-normal" style="font-size: 0.7rem; background: rgba(100, 116, 139, 0.1);">
                                             <i class="fa-solid fa-hammer me-1"></i> Unskilled
                                         </span>
                                         {% endif %}

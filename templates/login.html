@@ -1,33 +1,295 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-5">
-        <div class="card p-4 shadow-lg border-0">
-            <div class="text-center mb-4">
-                <h2 class="fw-bold text-primary">Login</h2>
-                <p class="text-muted">Enter your credentials to access Shram Setu</p>
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<style>
+    /* Prevent body scroll when focusing on hero but allow for page */
+    .landing-wrapper {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background-color: var(--card-bg);
+        /* Match theme */
+    }
+
+    /* Top Fold Split Screen */
+    .hero-split {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        padding-top: 80px;
+        /* Account for fixed nav */
+    }
+
+    @media (min-width: 992px) {
+        .hero-split {
+            flex-direction: row;
+            align-items: center;
+        }
+    }
+
+    .hero-3d-container {
+        flex: 1;
+        position: relative;
+        min-height: 400px;
+        height: 50vh;
+        order: 2;
+        /* On mobile, 3D goes under login */
+    }
+
+    @media (min-width: 992px) {
+        .hero-3d-container {
+            height: 100vh;
+            order: 1;
+            /* On desktop, 3D is on the left */
+        }
+    }
+
+    .login-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 40px 20px;
+        order: 1;
+        z-index: 10;
+        /* Keep form above 3D bleeding effects */
+    }
+
+    @media (min-width: 992px) {
+        .login-container {
+            max-width: 500px;
+            padding: 40px 60px;
+            order: 2;
+        }
+    }
+
+    /* High End Card Styling */
+    .premium-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 25px 50px rgba(37, 99, 235, 0.15);
+        border-radius: 24px;
+        transform: translateY(0);
+        transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    /* Dark Mode Premium Form */
+    [data-bs-theme="dark"] .premium-card {
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .premium-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 30px 60px rgba(37, 99, 235, 0.2);
+    }
+
+    [data-bs-theme="dark"] .premium-card:hover {
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
+    }
+
+    /* Features Section */
+    .features-section {
+        background: linear-gradient(180deg, transparent 0%, rgba(37, 99, 235, 0.03) 100%);
+        padding: 100px 0;
+    }
+
+    .feature-icon-wrapper {
+        width: 70px;
+        height: 70px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin: 0 auto 25px auto;
+        color: white;
+    }
+
+    /* Marketing Text inside React */
+    .marketing-text {
+        position: absolute;
+        top: 8%;
+        /* Shifted upwards to create separation */
+        left: 5%;
+        z-index: 5;
+        pointer-events: none;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+    }
+
+    @media (max-width: 991px) {
+        .marketing-text {
+            top: 5%;
+            text-align: center;
+            width: 90%;
+            left: 5%;
+        }
+    }
+
+    /* Hide the Spline Watermark */
+    #built-with-spline {
+        display: none !important;
+    }
+</style>
+
+<div class="landing-wrapper">
+    <!-- Top Fold -->
+    <div class="hero-split">
+        <!-- 3D Spline Container (Managed by React) -->
+        <div class="hero-3d-container" id="hero3d-root" data-aos="fade-right" data-aos-duration="1200">
+            <!-- React will mount here -->
+        </div>
+
+        <!-- Login Card -->
+        <div class="login-container" data-aos="fade-left" data-aos-duration="1000" data-aos-delay="200">
+            <div class="premium-card p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold text-primary display-6 mb-2">Welcome Back</h2>
+                    <p class="text-muted">Enter your credentials to access Shram Setu</p>
+                </div>
+
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Email or Phone</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0 text-muted"><i
+                                    class="fa-solid fa-user"></i></span>
+                            <input type="text" name="identifier" class="form-control border-start-0 ps-0"
+                                placeholder="admin@shram.com" required>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0 text-muted"><i
+                                    class="fa-solid fa-lock"></i></span>
+                            <input type="password" name="password" class="form-control border-start-0 ps-0"
+                                placeholder="••••••••" required>
+                        </div>
+                    </div>
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm pb-2 pt-2"
+                            style="font-size: 1.1rem;">Sign In</button>
+                    </div>
+
+                    <div class="text-center mt-4 pt-4 border-top">
+                        <p class="text-muted small mb-3 fw-medium">Are you a registered worker?</p>
+                        <a href="/worker_login"
+                            class="btn btn-outline-warning rounded-pill px-4 fw-bold shadow-sm d-inline-flex align-items-center justify-content-center w-100 pb-2 pt-2">
+                            <i class="fa-solid fa-mobile-screen-button me-2"></i>Login with OTP
+                        </a>
+                    </div>
+                </form>
             </div>
-            <form method="POST">
-                <div class="mb-3">
-                    <label class="form-label small fw-bold">Email or Phone</label>
-                    <input type="text" name="identifier" class="form-control" placeholder="admin@shram.com" required>
+        </div>
+    </div>
+
+    <!-- Below the Fold Features -->
+    <div class="features-section">
+        <div class="container text-center">
+            <h2 class="display-5 fw-bold mb-3" data-aos="fade-up">Empowering the Unorganized Sector</h2>
+            <p class="lead text-muted mb-5 mx-auto" style="max-width: 600px;" data-aos="fade-up" data-aos-delay="100">
+                Shram Setu provides a transparent, verifiable, and secure way to track daily wages, ensuring every
+                worker is compensated fairly for their time and effort.
+            </p>
+
+            <div class="row g-5 mt-2">
+                <!-- Feature 1 -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
+                    <div class="card premium-card h-100 p-5 border-0 text-center">
+                        <div class="feature-icon-wrapper shadow-lg"
+                            style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                            <i class="fa-solid fa-clock"></i>
+                        </div>
+                        <h4 class="fw-bold mb-3">Immutable Logging</h4>
+                        <p class="text-muted mb-0">Record daily work hours with supervisor approvals, forming an
+                            unquestionable digital paper trail.</p>
+                    </div>
                 </div>
-                <div class="mb-4">
-                    <label class="form-label small fw-bold">Password</label>
-                    <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+
+                <!-- Feature 2 -->
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                    <div class="card premium-card h-100 p-5 border-0 text-center">
+                        <div class="feature-icon-wrapper shadow-lg"
+                            style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+                            <i class="fa-solid fa-indian-rupee-sign"></i>
+                        </div>
+                        <h4 class="fw-bold mb-3">Fair Overtime</h4>
+                        <p class="text-muted mb-0">The system automatically calculates 1.5x or 2.0x wages for every
+                            minute worked beyond standard hours.</p>
+                    </div>
                 </div>
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-primary btn-lg rounded-pill">Sign In</button>
+
+                <!-- Feature 3 -->
+                <div class="col-lg-4 col-md-6 offset-md-3 offset-lg-0" data-aos="fade-up" data-aos-delay="400">
+                    <div class="card premium-card h-100 p-5 border-0 text-center">
+                        <div class="feature-icon-wrapper shadow-lg"
+                            style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <h4 class="fw-bold mb-3">Dignity First</h4>
+                        <p class="text-muted mb-0">Empowering laborers with accessible dashboards, payment receipts, and
+                            automated OTP verification.</p>
+                    </div>
                 </div>
-                <div class="text-center mt-4 pt-3 border-top">
-    <p class="text-muted small mb-2">Are you a registered worker?</p>
-    <a href="/worker_login" class="btn btn-outline-warning rounded-pill px-4 fw-bold">
-        <i class="fa-solid fa-mobile-screen-button me-2"></i>Login with OTP
-    </a>
-</div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
+
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        AOS.init({ duration: 800, once: true });
+    });
+</script>
+
+<!-- React, ReactDOM, and Spline CDN Integration -->
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel" data-type="module">
+    {% raw %}
+    import React from 'https://esm.sh/react@18';
+    import ReactDOM from 'https://esm.sh/react-dom@18/client?deps=react@18';
+    import Spline from 'https://esm.sh/@splinetool/react-spline?deps=react@18,react-dom@18';
+
+    const Hero3D = () => {
+        return (
+            <div style={{
+                width: '100%',
+                height: '100%',
+                position: 'relative',
+                overflow: 'hidden',
+                borderRadius: '20px',
+                display: 'flex',
+                justifyContent: 'center',
+                padding: '24px',
+                background: 'linear-gradient(135deg, rgba(204, 85, 0, 0.15) 0%, rgba(60, 118, 61, 0.15) 100%)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)'
+            }} className="m-lg-3 shadow-lg">
+                <Spline scene="https://prod.spline.design/8g34EN-T2XpP4qvx/scene.splinecode" style={{ transform: 'scale(0.75) translateX(15%) translateY(80px)', transformOrigin: 'center center' }} />
+
+                <div className="marketing-text text-start">
+                    <h1 className="display-3 fw-bold text-white mb-2" style={{ lineHeight: '1.1' }}>
+                        Bridging the <br /><span className="text-warning">Gap</span> for Workers.
+                    </h1>
+                    <p className="lead text-white" style={{ opacity: 0.9, fontWeight: '500', fontSize: '1.3rem' }}>
+                        Dignity through technology.
+                    </p>
+                </div>
+            </div>
+        );
+    };
+
+    const rootElement = document.getElementById('hero3d-root');
+    if (rootElement) {
+        const root = ReactDOM.createRoot(rootElement);
+        root.render(<Hero3D />);
+    }
+    {% endraw %}
+</script>
 {% endblock %}

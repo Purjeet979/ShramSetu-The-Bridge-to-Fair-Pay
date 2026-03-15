@@ -6,8 +6,8 @@
 
     <div class="card shadow-sm border-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light">
+            <table class="table table-hover align-middle mb-0" style="background: transparent;">
+                <thead style="background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(10px);">
                     <tr class="small fw-bold text-muted text-uppercase">
                         <th class="ps-4">Date</th>
                         {% if session['user_role'] != 'Worker' %} <th>Worker</th> {% endif %}
@@ -22,7 +22,7 @@
                     <tr>
                         <td class="ps-4">{{ item.work_date }}</td>
                         {% if session['user_role'] != 'Worker' %} <td class="fw-bold">{{ item.name }}</td> {% endif %}
-                        <td><span class="badge bg-light text-dark border">{{ item.hours_worked }}h</span></td>
+                        <td><span class="badge text-dark fw-bold border" style="background: rgba(255,255,255,0.5);">{{ item.hours_worked }}h</span></td>
                         <td class="text-primary fw-bold">₹{{ item.wage_calculated }}</td>
                         <td>
                             {% if item.approval_status == 'Approved' %}
