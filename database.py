@@ -9,27 +9,49 @@ DB_CONFIG = {
 }
 
 
-def get_connection():
-
+def get_connection(include_db=True):
+    """
+    Establishes a connection to MySQL.
+    If include_db is True, it connects to the specific database 'daily_wage_db'.
+    If include_db is False, it connects to the MySQL server only (used for DB creation).
+    """
     try:
-        conn = mysql.connector.connect(**DB_CONFIG)
+        config = DB_CONFIG.copy()
+        if not include_db:
+            config.pop('database', None)
+
+        conn = mysql.connector.connect(**config)
+
+        # Automatically create database if it doesn't exist
+        if not include_db:
+            cursor = conn.cursor()
+            cursor.execute(f"CREATE DATABASE IF NOT EXISTS {DB_CONFIG['database']}")
+            cursor.close()
+
         return conn
     except mysql.connector.Error as err:
         print(f"❌ Connection Error: {err}")
+        print("💡 TIP: Check your MySQL credentials in DB_CONFIG inside database.py")
         return None
 
 
 def setup_tables():
-    conn = get_connection()
+    # Step 1: Create Database if it doesn't exist
+    conn = get_connection(include_db=False)
+    if conn:
+        conn.close()
+
+    # Step 2: Create Tables
+    conn = get_connection(include_db=True)
     if conn:
         cursor = conn.cursor()
 
-        # 1. New Users Table (Hierarchy: Admin, Supervisor, Worker handle karne ke liye)
+        # 1. Users Table
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             user_id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(100) NOT NULL,
-            identifier VARCHAR(100) UNIQUE NOT NULL, -- Email (Admin/Sup) ya Phone (Worker)
+            identifier VARCHAR(100) UNIQUE NOT NULL, 
             password_hash VARCHAR(255) NOT NULL,
             role ENUM('Admin', 'Supervisor', 'Worker') NOT NULL
         )
@@ -46,7 +68,7 @@ def setup_tables():
         )
         """)
 
-        # 3. Work Entries Table (Updated with Approval Logic and Remarks)
+        # 3. Work Entries Table
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS work_entries (
             entry_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -56,7 +78,7 @@ def setup_tables():
             wage_calculated DECIMAL(10, 2),
             status ENUM('Pending', 'Paid') DEFAULT 'Pending',
             approval_status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
-            admin_remark TEXT, -- Admin rejection ka reason yahan likhega
+            admin_remark TEXT,
             FOREIGN KEY (worker_id) REFERENCES workers(worker_id)
         )
         """)
@@ -73,8 +95,21 @@ def setup_tables():
         )
         """)
 
-        print("✅ SUCCESS: All tables (Users, Workers, Entries, Payments) are updated and ready!")
+        # 5. Seed Default Admin User
+        cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'Admin'")
+        admin_count = cursor.fetchone()[0]
+
+        if admin_count == 0:
+            print("👤 Seeding default admin user...")
+            cursor.execute("""
+                INSERT INTO users (name, identifier, password_hash, role) 
+                VALUES ('System Admin', 'admin@example.com', 'admin123', 'Admin')
+            """)
+            conn.commit()
+            print("✅ Default Admin Created: admin@example.com / admin123")
+
+        print("✅ SUCCESS: All tables are updated and ready!")
         conn.close()
 
 if __name__ == "__main__":
-    setup_tables()
+    setup_tables()
