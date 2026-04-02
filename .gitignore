@@ -1,3 +1,44 @@
-.venv/
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# Environment Variables
+.env
+.env.local
+.env.*
+
+# IDEs
 .idea/
+.vscode/
+*.swp
+*.swo
+
+# Database & Reports
+*.db
+*.sqlite3
+*.xlsx
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+.pytest_cache/
+.coverage
+htmlcov/

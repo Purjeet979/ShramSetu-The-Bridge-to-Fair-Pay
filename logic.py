@@ -1,7 +1,11 @@
 import database
 import mysql.connector
+import os
 import requests
 import random
+import pandas as pd
+from database import get_connection
+from datetime import datetime, timedelta
 
 class User:
     def __init__(self, name, identifier, role):
@@ -74,7 +78,7 @@ class SkilledWorker(Worker):
         return hours_worked * self._hourly_rate
 
 # --- HELPER FUNCTIONS ---
-def add_work_entry(worker_id, hours_worked):
+def add_work_entry(worker_id, hours_worked, supervisor_id, work_date=None, work_type=None, gps_location=None, photo_path=None):
     conn = database.get_connection()
     if not conn: return False
 
@@ -90,25 +94,36 @@ def add_work_entry(worker_id, hours_worked):
             worker = UnskilledWorker(data['name'], float(data['wage_rate']))
 
         wage = worker.calculate_wage(float(hours_worked))
+        
+        if not work_date:
+            work_date = datetime.now().date()
 
         # Save Entry
-        sql = "INSERT INTO work_entries (worker_id, work_date, hours_worked, wage_calculated, status) VALUES (%s, CURDATE(), %s, %s, 'Pending')"
-        cursor.execute(sql, (worker_id, hours_worked, wage))
+        # AUTO-APPROVE if hours <= 8. Admin only approves OT (> 8h).
+        approval_status = 'Approved' if float(hours_worked) <= 8 else 'Pending'
+
+        sql = """
+            INSERT INTO work_entries 
+            (worker_id, supervisor_id, work_date, hours_worked, wage_calculated, work_type, gps_location, photo_path, status, approval_status) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'Pending', %s)
+        """
+        cursor.execute(sql, (worker_id, supervisor_id, work_date, hours_worked, wage, work_type, gps_location, photo_path, approval_status))
         conn.commit()
         conn.close()
         return True
     return False
 
-def get_pending_wages():
+def get_all_approved_wages():
     conn = database.get_connection()
     result = []
     if conn:
-        cursor = conn.cursor()
+        cursor = conn.cursor(dictionary=True)
         sql = """
-                    SELECT w.name, e.entry_id, e.work_date, e.wage_calculated, w.worker_type 
+                    SELECT w.name, e.entry_id, e.work_date, e.wage_calculated, w.worker_type, e.status
                     FROM work_entries e 
                     JOIN workers w ON e.worker_id = w.worker_id 
-                    WHERE e.status = 'Pending'
+                    WHERE e.approval_status = 'Approved'
+                    ORDER BY e.work_date DESC
                 """
         cursor.execute(sql)
         result = cursor.fetchall()
@@ -204,12 +219,14 @@ def get_worker_stats(identifier):
 
             cursor.close()
 
-            # 2. Fetch Recent Entries (Using Dictionary Cursor for easy template rendering)
+            # 2. Fetch Recent Entries
             cursor = conn.cursor(dictionary=True)
             cursor.execute("""
-                SELECT * FROM work_entries 
-                WHERE worker_id = %s 
-                ORDER BY work_date DESC LIMIT 10
+                SELECT e.*, u.name as supervisor_name 
+                FROM work_entries e 
+                LEFT JOIN users u ON e.supervisor_id = u.user_id
+                WHERE e.worker_id = %s 
+                ORDER BY e.work_date DESC LIMIT 10
             """, (worker_id,))
             entries = cursor.fetchall()
 
@@ -242,7 +259,7 @@ def send_real_otp(phone_number, otp):
     Fast2SMS API ka use karke real SMS OTP bhejta hai.
     """
 
-    API_KEY = "YOUR_FAST2SMS_API_KEY_HERE"
+    API_KEY = os.getenv("FAST2SMS_API_KEY", "YOUR_FAST2SMS_API_KEY_HERE")
 
     url = "https://www.fast2sms.com/dev/bulkV2"
 
@@ -273,3 +290,107 @@ def send_real_otp(phone_number, otp):
     except Exception as e:
         print(f"Fast2SMS API Error: {e}")
         return False
+
+
+def apply_penalty_if_needed(wage, work_date):
+    """
+    Adds a 10% penalty on wages that remain unpaid beyond 37 days
+    (30-day due period + 7-day grace period).
+    """
+    wage = float(wage)
+    today = datetime.now().date()
+    work_date = datetime.strptime(str(work_date), "%Y-%m-%d").date()
+
+    due_date = work_date + timedelta(days=30)
+    penalty_date = due_date + timedelta(days=7)
+
+    if today > penalty_date:
+        wage = wage * 1.10
+
+    return round(wage, 2)
+
+
+def export_payments_to_excel():
+    """
+    Exports all payment records to an Excel (.xlsx) file.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    query = """
+    SELECT 
+        p.payment_id,
+        w.name AS worker_name,
+        p.amount_paid,
+        p.payment_mode,
+        p.payment_date
+    FROM payments p
+    JOIN workers w ON p.worker_id = w.worker_id
+    """
+
+    cursor.execute(query)
+    data = cursor.fetchall()
+
+    columns = [
+        "Payment ID",
+        "Worker Name",
+        "Amount Paid",
+        "Payment Mode",
+        "Payment Date"
+    ]
+
+    df = pd.DataFrame(data, columns=columns)
+
+    file_name = "payments_report.xlsx"
+    df.to_excel(file_name, index=False)
+
+    conn.close()
+
+    return file_name
+
+
+def make_payment(entry_id, payment_mode):
+    """
+    Processes a payment for a work entry:
+    1. Fetches the entry
+    2. Applies late penalty if applicable
+    3. Inserts a record into the payments table
+    4. Marks the work entry as 'Paid'
+    """
+    conn = database.get_connection()
+    if not conn:
+        return False
+
+    cursor = conn.cursor(dictionary=True)
+
+    # Step 1: Fetch entry
+    cursor.execute("SELECT * FROM work_entries WHERE entry_id = %s", (entry_id,))
+    entry = cursor.fetchone()
+
+    if not entry:
+        conn.close()
+        return False
+
+    # Step 2: Apply penalty if needed
+    wage = entry['wage_calculated']
+    work_date = entry['work_date']
+    final_amount = apply_penalty_if_needed(wage, work_date)
+    worker_id = entry['worker_id']
+
+    # Step 3: Insert into payments table
+    cursor.execute("""
+        INSERT INTO payments (worker_id, amount_paid, payment_mode)
+        VALUES (%s, %s, %s)
+    """, (worker_id, final_amount, payment_mode))
+
+    # Step 4: Update status to Paid
+    cursor.execute("""
+        UPDATE work_entries
+        SET status = 'Paid'
+        WHERE entry_id = %s
+    """, (entry_id,))
+
+    conn.commit()
+    conn.close()
+
+    return True

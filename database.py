@@ -1,11 +1,15 @@
 import mysql.connector
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # --- CONFIGURATION ---
 DB_CONFIG = {
-    'host': "localhost",
-    'user': "root",
-    'password': "Purjeet@342",
-    'database': "daily_wage_db"
+    'host': os.getenv("DB_HOST", "localhost"),
+    'user': os.getenv("DB_USER", "root"),
+    'password': os.getenv("DB_PASSWORD", ""),
+    'database': os.getenv("DB_NAME", "daily_wage_db")
 }
 
 
@@ -73,13 +77,19 @@ def setup_tables():
         CREATE TABLE IF NOT EXISTS work_entries (
             entry_id INT AUTO_INCREMENT PRIMARY KEY,
             worker_id INT,
+            supervisor_id INT,
             work_date DATE NOT NULL,
             hours_worked DECIMAL(4, 1) NOT NULL,
             wage_calculated DECIMAL(10, 2),
+            work_type VARCHAR(100),
+            gps_location VARCHAR(100),
+            photo_path VARCHAR(255),
             status ENUM('Pending', 'Paid') DEFAULT 'Pending',
             approval_status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
             admin_remark TEXT,
-            FOREIGN KEY (worker_id) REFERENCES workers(worker_id)
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (worker_id) REFERENCES workers(worker_id),
+            FOREIGN KEY (supervisor_id) REFERENCES users(user_id)
         )
         """)
 
@@ -103,7 +113,7 @@ def setup_tables():
             print("👤 Seeding default admin user...")
             cursor.execute("""
                 INSERT INTO users (name, identifier, password_hash, role) 
-                VALUES ('System Admin', 'admin@example.com', 'admin123', 'Admin')
+                VALUES ('System Admin', 'admin@example.com', 'admin_secure_123', 'Admin')
             """)
             conn.commit()
             print("✅ Default Admin Created: admin@example.com / admin123")

@@ -1,87 +1,121 @@
-# Shram Setu (The Bridge to Fair Pay) 🌉
+# Shram Setu 🌉 (The Bridge to Fair Pay)
 
-**A Web-based Wage Protection System to prevent exploitation and ensure transparent payments for daily wage workers.**
+**Empowering unorganized labor through digital transparency and secure wage verification.**
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
-![Flask](https://img.shields.io/badge/Framework-Flask-green)
-![Database](https://img.shields.io/badge/Database-MySQL-orange)
-![Status](https://img.shields.io/badge/Status-Active-success)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Flask-1.0%2B-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+
+---
 
 ## 📌 Project Overview
-**Shram Setu** addresses the critical issue of wage exploitation in the unorganized sector (construction, factories). By replacing verbal agreements with a **digital, non-deniable record system**, it ensures daily wage workers receive the exact amount they are owed.
 
-Moved from a desktop-only application to a **Web Application**, this system is now accessible via any device (Mobile/Laptop), focusing on **verification, proof, and accessibility**.
+**Shram Setu** is a dedicated web platform designed to eliminate wage exploitation in the unorganized sector. By digitizing work records and automating wage calculations, it ensures that every worker is paid fairly and transparently.
 
-## 🚀 Key Features
+> [!NOTE]
+> This project has evolved from a desktop utility into a full-scale **Web Application**, featuring **Mobile-First Design**, **Multi-Language Support**, and **Secure Authentication**.
 
-### 1. 🛡️ Non-Deniable Work Entry
-- Records Worker ID, Date, and Hours Worked securely in a MySQL database.
-- Once entered, data serves as a digital log that cannot be easily manipulated.
-- Eliminates "I didn't ask you to work today" excuses.
+---
 
-### 2. 🧮 Auto-Wage Calculation (OOP Based)
-- **Base Logic:** `Hours × Hourly Rate`
-- **Overtime Logic:** - **Unskilled:** 1.5x rate for hours > 8.
-  - **Skilled:** 2.0x rate for hours > 8.
-- Removes manual calculation errors or intentional underpayment.
+## ✨ Core Features
 
-### 3. 🌐 Web-Based Accessibility
-- Built with **Flask** and **Bootstrap 5**.
-- Responsive UI: Works on smartphones and desktops.
-- Simple dashboard for quick navigation.
+### 🛡️ Non-Deniable Digital Logs
+- Securely records Worker ID, Date, and Hours worked.
+- Persistent digital trail that prevents "verbal agreement" disputes.
 
-### 4. 📊 Compliance & Transparency
-- Tracks pending payments in real-time.
-- Visual "Status" indicators (Pending/Paid) for every work entry.
+### 🧮 Intelligent Wage Engine (OOP Based)
+- Automated calculations based on worker skill levels.
+- **Unskilled:** 1.5x Overtime for hours exceeding 8.
+- **Skilled:** 2.0x Overtime for hours exceeding 8.
+
+### 🌍 Accessibility & Multi-Language
+- **Bilingual Interface:** Toggle between **English** and **Hindi** for better accessibility.
+- **Responsive UI:** Seamless experience on Mobile, Tablet, and Desktop.
+
+### 🔐 Enterprise-Grade Security
+- **JWT Authentication:** Stateless, secure token-based logins.
+- **Google OAuth:** Integrated login for Administrators and Supervisors.
+- **Role-Based Access (RBAC):** Strict separation of Admin, Supervisor, and Worker functionalities.
+
+### 📸 Proof of Work
+- Mandatory photo uploads for overtime (>8 hours) to ensure verification.
+- GPS location tracking for on-site verification.
+
+---
 
 ## 🛠️ Technology Stack
-- **Backend:** Python 3.10+, Flask
-- **Frontend:** HTML5, CSS3, Bootstrap 5 (Jinja2 Templates)
-- **Database:** MySQL
-- **Database Connector:** `mysql-connector-python`
+
+| Layer | Technologies |
+| :--- | :--- |
+| **Backend** | Python (Flask), JWT, OAuth2 |
+| **Frontend** | HTML5, CSS3 (Glassmorphism), Bootstrap 5, Jinja2 |
+| **Database** | MySQL |
+| **Utilities** | Pandas (Reports), Fast2SMS (OTP), Canvas-Confetti (UX) |
+
+---
 
 ## 📂 Project Structure
+
 ```text
-ShramSetu-Web/
-├── templates/           # HTML Files (Frontend)
-│   ├── base.html        # Master Layout
-│   ├── index.html       # Dashboard
-│   ├── add_worker.html  # Registration Form
-│   ├── record_work.html # Daily Entry Form
-│   └── payments.html    # Pending Wages Table
-├── app.py               # Main Flask Application
-├── database.py          # Database Connection & Setup
-├── logic.py             # OOP Business Logic (Calculations)
-└── README.md            # Project Documentation
+WageVerificationSystem/
+├── static/              # Assets (Images, Uploads, CSS)
+├── templates/           # HTML Layouts & Views
+├── app.py               # Core Flask Application & Routes
+├── database.py          # Schema Definition & Seed Data
+├── logic.py             # Business Logic & OOP Models
+├── translations.py      # i18n support (EN/HI)
+└── .env.example         # Environment template
 ```
+
+---
+
 ## ⚙️ Installation & Setup
 
-### Prerequisites
-* Python installed (v3.x)
-* MySQL Server installed (running on localhost)
-* Git installed
-
-### Step 1: Clone the Repository
+### 1. Clone the Repository
 ```bash
-git clone [https://github.com/Purjeet979/ShramSetu-The-Bridge-to-Fair-Pay.git](https://github.com/Purjeet979/ShramSetu-The-Bridge-to-Fair-Pay.git)
+git clone https://github.com/Purjeet979/ShramSetu-The-Bridge-to-Fair-Pay.git
 cd ShramSetu-The-Bridge-to-Fair-Pay
 ```
-### Step 2: Install Dependencies
-* Create a virtual environment (optional but recommended) and install required libraries:
-```bash
-pip install flask mysql-connector-python
+
+### 2. Environment Configuration
+Create a `.env` file in the root directory and add the following:
+```env
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=daily_wage_db
+APP_SECRET_KEY=your_secret_key
+JWT_SECRET_KEY=your_jwt_key
+GOOGLE_CLIENT_ID=your_google_id
+GOOGLE_CLIENT_SECRET=your_google_secret
+FAST2SMS_API_KEY=your_sms_key
 ```
-### Step 3: Configure Database
-* Open database.py. Update the DB_CONFIG dictionary with your MySQL credentials:
+
+### 3. Install Dependencies
 ```bash
-DB_CONFIG = {
-    'host': "localhost",
-    'user': "root",
-    'password': "YOUR_MYSQL_PASSWORD",  # <--- Update this!
-    'database': "daily_wage_db"
-}
+pip install -r requirements.txt
 ```
-### Step 4: Run the Application
+*(Note: Ensure you have `flask`, `flask-jwt-extended`, `authlib`, `mysql-connector-python`, `requests`, and `pandas` installed.)*
+
+### 4. Initialize Database
+```bash
+python database.py
+```
+
+### 5. Run the Application
 ```bash
 python app.py
 ```
+
+---
+
+## 🤝 Contributing
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+---
+
+## 📄 License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+*Built with ❤️ for the hardworking hands of India.*

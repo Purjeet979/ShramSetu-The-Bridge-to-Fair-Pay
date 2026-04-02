@@ -260,6 +260,20 @@
             </a>
 
             <div class="d-flex align-items-center order-lg-3">
+                <!-- Language Toggle (Worker Pages Only) -->
+                {% if current_user and current_user.role == 'Worker' or request.path in ['/worker_login', '/verify_otp'] %}
+                <div class="dropdown me-2">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle border-0" type="button" data-bs-toggle="dropdown">
+                        <i class="fa-solid fa-language me-1"></i>
+                        {{ 'हिन्दी' if session.get('lang') == 'hi' else 'EN' }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                        <li><a class="dropdown-item" href="/set_language/en">English</a></li>
+                        <li><a class="dropdown-item" href="/set_language/hi">हिन्दी (Hindi)</a></li>
+                    </ul>
+                </div>
+                {% endif %}
+
                 <div id="theme-toggle" class="me-2 text-muted">
                     <i class="fa-solid fa-moon fs-5" id="theme-icon"></i>
                 </div>
@@ -271,49 +285,51 @@
 
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
-                    {% if session['user_id'] %}
+                    {% if current_user %}
 
-                    <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/">{{ _('dashboard') }}</a></li>
 
-                    {% if session['user_role'] == 'Admin' %}
+                    {% if current_user.role == 'Admin' %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fa-solid fa-plus me-1"></i> Register
+                            <i class="fa-solid fa-plus me-1"></i> {{ _('register') }}
                         </a>
                         <ul class="dropdown-menu border-0 shadow-sm mt-2">
                             <li><a class="dropdown-item py-2" href="/add_worker"><i
-                                        class="fa-solid fa-helmet-safety me-2 text-warning"></i>Worker</a></li>
+                                         class="fa-solid fa-helmet-safety me-2 text-warning"></i>{{ _('worker') }}</a></li>
                             <li><a class="dropdown-item py-2" href="/add_supervisor"><i
-                                        class="fa-solid fa-user-tie me-2 text-primary"></i>Supervisor</a></li>
+                                         class="fa-solid fa-user-tie me-2 text-primary"></i>{{ _('supervisor') }}</a></li>
                         </ul>
                     </li>
+                    {% elif current_user.role == 'Supervisor' %}
+                    <li class="nav-item"><a class="nav-link" href="/add_worker"><i class="fa-solid fa-plus me-1"></i> {{ _('add_worker') }}</a></li>
                     {% endif %}
 
-                    {% if session['user_role'] in ['Admin', 'Supervisor'] %}
-                    <li class="nav-item"><a class="nav-link" href="/record_work">Record Work</a></li>
+                    {% if current_user.role in ['Admin', 'Supervisor'] %}
+                    <li class="nav-item"><a class="nav-link" href="/record_work">{{ _('record_work') }}</a></li>
                     {% endif %}
 
-                    {% if session['user_role'] == 'Admin' %}
-                    <li class="nav-item"><a class="nav-link" href="/admin/approve_logs">Approvals</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/payments">Payments</a></li>
+                    {% if current_user.role == 'Admin' %}
+                    <li class="nav-item"><a class="nav-link" href="/admin/approve_logs">{{ _('approvals') }}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/payments">{{ _('payments') }}</a></li>
                     {% endif %}
 
-                    <li class="nav-item"><a class="nav-link" href="/history">History</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/history">{{ _('history') }}</a></li>
 
                     <li class="nav-item ms-lg-3 dropdown">
                         <a class="nav-link dropdown-toggle fw-bold text-primary d-flex align-items-center" href="#"
                             role="button" data-bs-toggle="dropdown">
-                            <i class="fa-solid fa-circle-user me-1"></i> {{ session['user_name'] }}
+                            <i class="fa-solid fa-circle-user me-1"></i> {{ current_user.name }}
                             <span class="badge bg-secondary-subtle text-secondary ms-2" style="font-size: 0.65rem;">{{
-                                session['user_role'] }}</span>
+                                _('admin') if current_user.role == 'Admin' else (_('supervisor') if current_user.role == 'Supervisor' else _('worker')) }}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                             <li><a class="dropdown-item text-danger" href="/logout"><i
-                                        class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
+                                        class="fa-solid fa-right-from-bracket me-2"></i>{{ _('logout') }}</a></li>
                         </ul>
                     </li>
                     {% else %}
-                    <li class="nav-item"><a class="nav-link btn-nav" href="/login">Login</a></li>
+                    <li class="nav-item"><a class="nav-link btn-nav" href="/login">{{ _('login') }}</a></li>
                     {% endif %}
                 </ul>
             </div>

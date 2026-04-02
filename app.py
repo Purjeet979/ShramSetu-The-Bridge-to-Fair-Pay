@@ -1,13 +1,109 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, send_file, session, jsonify, make_response, send_from_directory
 import database
 import logic
 import random
-
-from flask import session
+import os
+from translations import TRANSLATIONS
 from functools import wraps
+from dotenv import load_dotenv
+from flask_jwt_extended import (
+    JWTManager, create_access_token, jwt_required, 
+    set_access_cookies, unset_jwt_cookies, get_jwt_identity, get_jwt,
+    verify_jwt_in_request
+)
+from authlib.integrations.flask_client import OAuth
+from werkzeug.utils import secure_filename
+import time
+
+load_dotenv()
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 app = Flask(__name__)
-app.secret_key = "shram_setu_secret_key"  # Needed for flash messages
+app.secret_key = os.getenv("APP_SECRET_KEY", "shram_setu_secret_key")
+
+# JWT Configuration
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "super-secret-jwt-key")
+app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
+app.config["JWT_COOKIE_CSRF_PROTECT"] = False 
+app.config["JWT_ACCESS_COOKIE_PATH"] = "/"
+
+# File Upload Configuration
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+jwt = JWTManager(app)
+
+# OAuth Configuration
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={
+        'scope': 'openid email profile'
+    }
+)
+
+@app.context_processor
+def inject_user_and_translations():
+    user_dict = None
+    try:
+        verify_jwt_in_request(optional=True)
+        identity = get_jwt_identity()
+        if identity:
+            claims = get_jwt()
+            user_dict = {
+                'name': claims.get('name'),
+                'role': claims.get('role'),
+                'identifier': identity
+            }
+    except:
+        pass
+    
+    def get_translation(key):
+        lang = session.get('lang', 'en')
+        return TRANSLATIONS.get(lang, TRANSLATIONS['en']).get(key, key)
+        
+    return {
+        'current_user': user_dict,
+        'os': os,
+        '_': get_translation
+    }
+
+def role_required(required_role):
+    def decorator(f):
+        @wraps(f)
+        @jwt_required()
+        def decorated_function(*args, **kwargs):
+            claims = get_jwt()
+            user_role = claims.get('role')
+            if isinstance(required_role, list):
+                if user_role not in required_role:
+                    flash(f"🚫 Access Denied: Requires {required_role} role.", "danger")
+                    return redirect(url_for('index'))
+            else:
+                if user_role != required_role:
+                    flash(f"🚫 Access Denied: Requires {required_role} role.", "danger")
+                    return redirect(url_for('index'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+def login_required(f):
+    @wraps(f)
+    @jwt_required(optional=True)
+    def decorated_function(*args, **kwargs):
+        identity = get_jwt_identity()
+        if not identity:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -23,35 +119,55 @@ def login():
             conn.close()
 
             if user and user['password_hash'] == password:
-                session['user_id'] = user['user_id']
-                session['user_role'] = user['role']
-                session['user_name'] = user['name']
-                # NEW: Save identifier so we can look up worker details later
-                session['identifier'] = user['identifier']
-
+                access_token = create_access_token(
+                    identity=user['identifier'],
+                    additional_claims={'role': user['role'], 'name': user['name']}
+                )
+                response = redirect(url_for('index'))
+                set_access_cookies(response, access_token)
                 flash(f"Welcome {user['name']} ({user['role']})!", "success")
-                return redirect(url_for('index'))
+                return response
             else:
                 flash("Invalid credentials!", "error")
 
     return render_template('login.html')
 
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            flash("Please login first!", "warning")
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
+@app.route('/google-login')
+def google_login():
+    return google.authorize_redirect(url_for('google_auth', _external=True))
 
+@app.route('/google-auth')
+def google_auth():
+    token = google.authorize_access_token()
+    user_info = token.get('userinfo')
+    email = user_info['email']
+
+    conn = database.get_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM users WHERE identifier = %s", (email,))
+        user = cursor.fetchone()
+        conn.close()
+
+        if user:
+            access_token = create_access_token(
+                identity=user['identifier'],
+                additional_claims={'role': user['role'], 'name': user['name']}
+            )
+            response = redirect(url_for('index'))
+            set_access_cookies(response, access_token)
+            flash(f"Welcome {user['name']} ({user['role']})!", "success")
+            return response
+        else:
+            flash("Unauthorized Google Account. Please use your registered email.", "danger")
+            return redirect(url_for('login'))
+    return redirect(url_for('login'))
 
 @app.route('/worker_login', methods=['GET', 'POST'])
 def worker_login():
     if request.method == 'POST':
         phone = request.form['phone']
 
-        # 1. Check if worker exists in database
         conn = database.get_connection()
         if conn:
             cursor = conn.cursor(dictionary=True)
@@ -60,19 +176,11 @@ def worker_login():
             conn.close()
 
             if worker:
-                # 2. Generate 4-digit OTP
                 otp = random.randint(1000, 9999)
-
-                # 3. Save OTP and Phone in session temporarily
                 session['temp_otp'] = str(otp)
                 session['temp_phone'] = phone
-
-                # 4. Print in console (Development ke liye easy testing)
                 print(f"🔔 [DEBUG] OTP for {phone} is: {otp}")
-
-                # 5. Send Real SMS
                 logic.send_real_otp(phone, otp)
-
                 flash("OTP sent successfully to your phone!", "success")
                 return redirect(url_for('verify_otp'))
             else:
@@ -80,10 +188,8 @@ def worker_login():
 
     return render_template('worker_login.html')
 
-
 @app.route('/verify_otp', methods=['GET', 'POST'])
 def verify_otp():
-    # Agar phone number session mein nahi hai, toh wapas bhej do
     if 'temp_phone' not in session:
         return redirect(url_for('worker_login'))
 
@@ -93,8 +199,6 @@ def verify_otp():
 
         if entered_otp == saved_otp:
             phone = session.get('temp_phone')
-
-            # Fetch worker details for login session
             conn = database.get_connection()
             if conn:
                 cursor = conn.cursor(dictionary=True)
@@ -102,15 +206,15 @@ def verify_otp():
                 worker = cursor.fetchone()
                 conn.close()
 
-                # Set official session variables
-                session.clear()  # Clear temp stuff
-                session['user_id'] = worker['worker_id']
-                session['user_role'] = 'Worker'
-                session['user_name'] = worker['name']
-                session['identifier'] = worker['phone']
-
+                access_token = create_access_token(
+                    identity=worker['phone'],
+                    additional_claims={'role': 'Worker', 'name': worker['name']}
+                )
+                session.clear()
+                response = redirect(url_for('index'))
+                set_access_cookies(response, access_token)
                 flash(f"Login Successful! Welcome {worker['name']}.", "success")
-                return redirect(url_for('index'))
+                return response
         else:
             flash("Invalid OTP. Please try again.", "error")
 
@@ -118,109 +222,82 @@ def verify_otp():
 
 @app.route('/logout')
 def logout():
-    session.clear()
-    return redirect(url_for('login'))
-
-
+    response = redirect(url_for('login'))
+    unset_jwt_cookies(response)
+    session.pop('lang', None)
+    flash("Successfully logged out.", "success")
+    return response
 
 @app.route('/')
 @login_required
 def index():
+    claims = get_jwt()
+    user_role = claims.get('role')
+    identifier = get_jwt_identity()
 
-    if session.get('user_role') == 'Worker':
-        # Fetch data specifically for this worker
-        identifier = session.get('identifier')
+    if user_role == 'Worker':
         stats, entries = logic.get_worker_stats(identifier)
         return render_template('worker_dashboard.html', stats=stats, entries=entries)
 
     stats = logic.get_dashboard_stats()
     chart_data = logic.get_chart_data()
     comp_data = logic.get_composition_data()
-    return render_template('index.html',
-                           stats=stats,
-                           chart_data=chart_data,
-                           comp_data=comp_data)
-
+    return render_template('index.html', stats=stats, chart_data=chart_data, comp_data=comp_data)
 
 @app.route('/admin/approve_logs')
-@login_required
+@role_required('Admin')
 def approve_logs():
-    if session.get('user_role') != 'Admin':
-        flash("Unauthorized Access!", "danger")
-        return redirect(url_for('index'))
-
     conn = database.get_connection()
     logs = []
     if conn:
         cursor = conn.cursor(dictionary=True)
-
         query = """
-            SELECT e.entry_id, w.name as worker_name, w.worker_type, e.work_date, 
-                   e.hours_worked, e.wage_calculated 
-            FROM work_entries e
-            JOIN workers w ON e.worker_id = w.worker_id
-            WHERE e.approval_status = 'Pending'
+            SELECT e.*, w.name as worker_name, w.worker_type, u.name as supervisor_name 
+            FROM work_entries e 
+            JOIN workers w ON e.worker_id = w.worker_id 
+            LEFT JOIN users u ON e.supervisor_id = u.user_id
+            WHERE e.approval_status = 'Pending' AND e.hours_worked > 8
+            ORDER BY e.work_date DESC
         """
         cursor.execute(query)
         logs = cursor.fetchall()
         conn.close()
     return render_template('approve_logs.html', logs=logs)
 
-
 @app.route('/admin/verify_entry/<int:entry_id>', methods=['POST'])
-@login_required
+@role_required('Admin')
 def verify_entry(entry_id):
-    if session.get('user_role') != 'Admin':
-        return "Unauthorized", 403
-
-    action = request.form.get('action')  # 'Approved' ya 'Rejected'
+    action = request.form.get('action') 
     remark = request.form.get('remark')
-
-
-    admin_obj = logic.Admin(session['user_name'], session['user_id'])
+    
+    claims = get_jwt()
+    admin_obj = logic.Admin(claims.get('name'), get_jwt_identity())
     success = admin_obj.update_entry_status(entry_id, action, remark)
 
     if success:
         flash(f"Entry #{entry_id} has been {action}.", "success")
     else:
         flash("Error updating entry.", "danger")
-
     return redirect(url_for('approve_logs'))
 
-
 @app.route('/add_supervisor', methods=['GET', 'POST'])
-@login_required
+@role_required('Admin')
 def add_supervisor():
-    # RBAC: Sirf Admin hi Supervisor add kar sakta hai
-    if session.get('user_role') != 'Admin':
-        flash("🚫 Access Denied: Only Admins can add Supervisors.", "danger")
-        return redirect(url_for('index'))
-
     if request.method == 'POST':
         name = request.form['name']
         username = request.form['username']
         password = request.form['password']
-
         success, message = logic.add_supervisor_to_db(name, username, password)
-
         if success:
             flash(f"✅ Success: Supervisor {name} created!", "success")
             return redirect(url_for('add_supervisor'))
         else:
             flash(f"❌ Error: {message}", "error")
-
     return render_template('add_supervisor.html')
 
-
-# 2. ADD WORKER PAGE
 @app.route('/add_worker', methods=['GET', 'POST'])
-@login_required
+@role_required(['Admin', 'Supervisor'])
 def add_worker():
-    # RBAC Check: Only Admin can register workers
-    if session.get('user_role') != 'Admin':
-        flash("🚫 Access Denied: Only Admins can register workers.", "danger")
-        return redirect(url_for('index'))
-
     if request.method == 'POST':
         name = request.form['name']
         phone = request.form['phone']
@@ -236,34 +313,52 @@ def add_worker():
             return redirect(url_for('add_worker'))
         except ValueError:
             flash("❌ Error: Rate must be a number.", "error")
-
     return render_template('add_worker.html')
 
-
-
 @app.route('/record_work', methods=['GET', 'POST'])
-@login_required
+@role_required(['Admin', 'Supervisor'])
 def record_work():
-    # RBAC Check: Worker cannot log their own hours
-    if session.get('user_role') not in ['Admin', 'Supervisor']:
-        flash("🚫 Access Denied: Workers cannot log their own hours.", "danger")
-        return redirect(url_for('index'))
-
-    # ... (Baaki code same rahega) ...
     if request.method == 'POST':
         worker_id = request.form['worker_id']
-        hours = request.form['hours']
-        try:
-            success = logic.add_work_entry(worker_id, hours)
+        hours = float(request.form['hours'])
+        work_type = request.form.get('work_type', 'General')
+        notes = request.form.get('notes', '')
+        gps_location = request.form.get('gps_location', '')
+        
+        photo_path = None
+        if hours > 8:
+            if 'photo' not in request.files or request.files['photo'].filename == '':
+                flash("❌ Error: Photo is mandatory for entries > 8 hours.", "danger")
+                return redirect(url_for('record_work'))
+            
+            file = request.files['photo']
+            if file and allowed_file(file.filename):
+                filename = secure_filename(f"{int(time.time())}_{file.filename}")
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                photo_path = f"uploads/{filename}"
+
+        conn = database.get_connection()
+        if conn:
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("SELECT user_id FROM users WHERE identifier = %s", (get_jwt_identity(),))
+            user = cursor.fetchone()
+            supervisor_id = user['user_id'] if user else None
+            conn.close()
+
+            success = logic.add_work_entry(
+                worker_id=worker_id,
+                hours_worked=hours,
+                supervisor_id=supervisor_id,
+                work_type=work_type,
+                gps_location=gps_location,
+                photo_path=photo_path
+            )
             if success:
                 flash("✅ Work recorded successfully!", "success")
             else:
-                flash("❌ Error: Worker ID not found.", "error")
-        except Exception as e:
-            flash(f"❌ Error: {str(e)}", "error")
+                flash("❌ Error recording work.", "error")
         return redirect(url_for('record_work'))
 
-    # GET Request
     conn = database.get_connection()
     workers = []
     if conn:
@@ -271,33 +366,39 @@ def record_work():
         cursor.execute("SELECT * FROM workers")
         workers = cursor.fetchall()
         conn.close()
-    return render_template('record_work.html', workers=workers)
+    
+    from datetime import datetime
+    today_date = datetime.now().strftime('%Y-%m-%d')
+    return render_template('record_work.html', workers=workers, today_date=today_date)
 
 @app.route('/history')
 @login_required
 def history():
-    user_role = session.get('user_role')
-    user_id = session.get('user_id')
-    identifier = session.get('identifier')  # Phone or Email
+    claims = get_jwt()
+    user_role = claims.get('role')
+    identifier = get_jwt_identity()
 
     conn = database.get_connection()
     history_data = []
 
     if conn:
         cursor = conn.cursor(dictionary=True)
-
         if user_role == 'Worker':
             query = """
-                SELECT e.*, w.name FROM work_entries e 
+                SELECT e.*, w.name as worker_name, u.name as supervisor_name 
+                FROM work_entries e 
                 JOIN workers w ON e.worker_id = w.worker_id 
+                LEFT JOIN users u ON e.supervisor_id = u.user_id
                 WHERE w.phone = %s 
                 ORDER BY e.work_date DESC
             """
             cursor.execute(query, (identifier,))
         else:
             query = """
-                SELECT e.*, w.name FROM work_entries e 
+                SELECT e.*, w.name as worker_name, u.name as supervisor_name 
+                FROM work_entries e 
                 JOIN workers w ON e.worker_id = w.worker_id 
+                LEFT JOIN users u ON e.supervisor_id = u.user_id
                 ORDER BY e.work_date DESC
             """
             cursor.execute(query)
@@ -307,21 +408,38 @@ def history():
 
     return render_template('history.html', history=history_data)
 
-# 4. PAYMENTS PAGE
 @app.route('/payments')
-@login_required
+@role_required('Admin')
 def payments():
-    if session.get('user_role') != 'Admin':
-        flash(" Access Denied: Only Admins can release payments.", "danger")
-        return redirect(url_for('index'))
+    approved_data = logic.get_all_approved_wages()
+    return render_template('payments.html', payments=approved_data)
 
-    pending_data = logic.get_pending_wages()
-    return render_template('payments.html', payments=pending_data)
+@app.route('/pay/<int:entry_id>', methods=['POST'])
+@role_required('Admin')
+def pay(entry_id):
+    payment_mode = request.form.get('payment_mode', 'Cash')
+    success = logic.make_payment(entry_id, payment_mode)
+    if success:
+        flash(f"✅ Payment for Entry #{entry_id} processed successfully!", "success")
+    else:
+        flash(f"❌ Error: Could not process payment for Entry #{entry_id}.", "danger")
+    return redirect(url_for('payments'))
 
-@app.route('/my_status')
-@login_required
-def my_status():
-    return redirect(url_for('index'))
+@app.route('/export_payments')
+@role_required('Admin')
+def export_payments():
+    file_path = logic.export_payments_to_excel()
+    return send_file(file_path, as_attachment=True)
+
+@app.route('/set_language/<lang>')
+def set_language(lang):
+    if lang in ['en', 'hi']:
+        session['lang'] = lang
+    return redirect(request.referrer or url_for('index'))
+
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == '__main__':
     database.setup_tables()

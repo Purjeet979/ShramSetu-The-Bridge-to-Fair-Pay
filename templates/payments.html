@@ -3,10 +3,10 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h2 class="fw-bold mb-1">Pending Payments</h2>
-        <p class="text-muted">Manage unpaid wages and verify records.</p>
+        <h2 class="fw-bold mb-1">Payment Management</h2>
+        <p class="text-muted">View all approved wages and record payments.</p>
     </div>
-    <button class="btn btn-dark"><i class="fa-solid fa-download me-2"></i>Export Report</button>
+    <a href="{{ url_for('export_payments') }}" class="btn btn-dark"><i class="fa-solid fa-download me-2"></i>Export Report</a>
 </div>
 
 <div class="card shadow-sm">
@@ -27,16 +27,16 @@
                 <tbody>
                     {% for row in payments %}
                     <tr>
-                        <td class="ps-4 text-muted">#{{ row[1] }}</td>
+                        <td class="ps-4 text-muted">#{{ row.entry_id }}</td>
                         <td class="fw-bold">
                             <div class="d-flex align-items-center">
                                 <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">
-                                    {{ row[0][0] }}
+                                    {{ row.name[0] }}
                                 </div>
                                 <div class="d-flex flex-column">
-                                    <span>{{ row[0] }}</span>
+                                    <span>{{ row.name }}</span>
                                     <div>
-                                        {% if row[4] == 'Skilled' %}
+                                        {% if row.worker_type == 'Skilled' %}
                                         <span class="badge text-info border border-info border-opacity-25 fw-normal" style="font-size: 0.7rem; background: rgba(14, 165, 233, 0.1);">
                                             <i class="fa-solid fa-star me-1"></i> Skilled
                                         </span>
@@ -49,13 +49,36 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="text-muted">{{ row[2] }}</td>
-                        <td class="text-success fw-bold">₹{{ row[3] }}</td>
-                        <td><span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill">Pending</span></td>
+                        <td class="text-muted">{{ row.work_date }}</td>
+                        <td class="text-success fw-bold">₹{{ row.wage_calculated|round(2) }}</td>
+                        <td>
+                            {% if row.status == 'Paid' %}
+                            <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill border border-success border-opacity-25">
+                                <i class="fa-solid fa-check-circle me-1"></i> {{ _('paid') }}
+                            </span>
+                            {% else %}
+                            <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill border border-warning border-opacity-25">
+                                <i class="fa-solid fa-clock me-1"></i> {{ _('pending') }}
+                            </span>
+                            {% endif %}
+                        </td>
                         <td class="text-end pe-4">
-                            <button class="btn btn-sm btn-success rounded-pill px-3">
-                                Pay Now
+                            {% if row.status == 'Pending' %}
+                            <form action="{{ url_for('pay', entry_id=row.entry_id) }}" method="POST" class="d-inline-flex align-items-center gap-2">
+                                <select name="payment_mode" class="form-select form-select-sm" style="width: auto; min-width: 110px;">
+                                    <option value="Cash">Cash</option>
+                                    <option value="UPI">UPI</option>
+                                    <option value="Bank Transfer">Bank Transfer</option>
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">
+                                    Pay Now
+                                </button>
+                            </form>
+                            {% else %}
+                            <button class="btn btn-sm btn-light rounded-pill px-3 text-muted border" disabled>
+                                <i class="fa-solid fa-circle-check me-1"></i> Processed
                             </button>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -67,8 +90,8 @@
                 <div class="mb-3 text-muted opacity-25">
                     <i class="fa-solid fa-file-invoice-dollar fa-4x"></i>
                 </div>
-                <h5 class="fw-bold text-muted">All caught up!</h5>
-                <p class="text-muted">No pending payments found.</p>
+                <h5 class="fw-bold text-muted">No Approval Records</h5>
+                <p class="text-muted">Approved work entries will appear here for payment.</p>
             </div>
         {% endif %}
     </div>

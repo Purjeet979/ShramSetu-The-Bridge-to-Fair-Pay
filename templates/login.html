@@ -177,6 +177,12 @@
                     </div>
 
                     <div class="text-center mt-4 pt-4 border-top">
+                        <p class="text-muted small mb-3 fw-medium">Or sign in with</p>
+                        <a href="{{ url_for('google_login') }}" 
+                           class="btn btn-outline-danger rounded-pill px-4 fw-bold shadow-sm d-inline-flex align-items-center justify-content-center w-100 mb-3 pb-2 pt-2">
+                            <i class="fa-brands fa-google me-2"></i>Login with Google
+                        </a>
+                        
                         <p class="text-muted small mb-3 fw-medium">Are you a registered worker?</p>
                         <a href="/worker_login"
                             class="btn btn-outline-warning rounded-pill px-4 fw-bold shadow-sm d-inline-flex align-items-center justify-content-center w-100 pb-2 pt-2">
