@@ -3,7 +3,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="fw-bold"><i class="fa-solid fa-user-check text-primary me-2"></i>Review Work Logs</h2>
-    <span class="badge bg-primary rounded-pill px-3 py-2">{{ logs|length }} Pending Reviews</span>
+    <span class="badge bg-primary rounded-pill px-3 py-2">{{ logs|length }} Overtime Requests</span>
 </div>
 
 <div class="card shadow-sm border-0">
@@ -12,8 +12,10 @@
             <thead class="bg-light">
                 <tr class="small fw-bold text-muted text-uppercase">
                     <th class="ps-4">Worker</th>
+                    <th>Supervisor</th>
                     <th>Date</th>
                     <th>Hours</th>
+                    <th>Proof</th>
                     <th>Calculated Wage</th>
                     <th class="text-end pe-4">Actions</th>
                 </tr>
@@ -25,8 +27,20 @@
                         <div class="fw-bold">{{ log.worker_name }}</div>
                         <small class="text-muted">{{ log.worker_type }}</small>
                     </td>
+                    <td>
+                        <div class="small fw-bold text-muted">{{ log.supervisor_name or 'System' }}</div>
+                    </td>
                     <td>{{ log.work_date }}</td>
                     <td><span class="badge bg-light text-dark border">{{ log.hours_worked }}h</span></td>
+                    <td>
+                        {% if log.photo_path %}
+                        <a href="/{{ log.photo_path }}" target="_blank">
+                            <img src="/{{ log.photo_path }}" class="rounded shadow-sm" style="width: 40px; height: 40px; object-fit: cover;">
+                        </a>
+                        {% else %}
+                        <span class="text-muted small italic">No Photo</span>
+                        {% endif %}
+                    </td>
                     <td class="text-primary fw-bold">₹{{ log.wage_calculated }}</td>
                     <td class="text-end pe-4">
                         <form action="/admin/verify_entry/{{ log.entry_id }}" method="POST" class="d-inline">

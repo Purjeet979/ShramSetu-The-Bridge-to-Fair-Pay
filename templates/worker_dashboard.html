@@ -5,59 +5,85 @@
     <div class="row g-4 mb-5">
         <div class="col-md-6">
             <div class="card bg-primary text-white p-4 border-0 shadow">
-                <small class="opacity-75 text-uppercase fw-bold">Total Pending Wages</small>
+                <small class="opacity-75 text-uppercase fw-bold">{{ _('total_pending_wages') }}</small>
                 <h2 class="display-5 fw-bold">₹{{ "{:,.2f}".format(stats.total_pending) }}</h2>
             </div>
         </div>
         <div class="col-md-6">
             <div class="card bg-success text-white p-4 border-0 shadow">
-                <small class="opacity-75 text-uppercase fw-bold">Total Paid to Date</small>
+                <small class="opacity-75 text-uppercase fw-bold">{{ _('total_paid_to_date') }}</small>
                 <h2 class="display-5 fw-bold">₹{{ "{:,.2f}".format(stats.total_paid) }}</h2>
             </div>
         </div>
     </div>
 
-    <h3 class="fw-bold mb-4">My Work Records</h3>
+    <h3 class="fw-bold mb-4">{{ _('my_work_records') }}</h3>
     <div class="card border-0 shadow-sm">
         <div class="table-responsive">
             <table class="table align-middle mb-0">
                 <thead class="bg-light">
                     <tr class="small fw-bold text-muted">
-                        <th class="ps-4">Date</th>
-                        <th>Hours</th>
-                        <th>Amount</th>
-                        <th>Approval</th>
-                        <th>Status</th>
-                        <th class="pe-4">Notes</th>
+                        <th class="ps-4">{{ _('date') }}</th>
+                        <th>{{ _('type') }}</th>
+                        <th>{{ _('supervisor') }}</th>
+                        <th>{{ _('hours') }}</th>
+                        <th>{{ _('amount') }}</th>
+                        <th>{{ _('proof') }}</th>
+                        <th>{{ _('status') }}</th>
+                        <th class="pe-4">{{ _('notes') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for entry in entries %}
                     <tr>
-                        <td class="ps-4">{{ entry.work_date }}</td>
-                        <td>{{ entry.hours_worked }}h</td>
-                        <td class="fw-bold">₹{{ entry.wage_calculated }}</td>
+                        <td class="ps-4">
+                            <span class="d-block fw-bold">{{ entry.work_date }}</span>
+                            <span class="text-muted extra-small">Ref: #{{ entry.entry_id }}</span>
+                        </td>
                         <td>
-                            {% if entry.approval_status == 'Approved' %}
-                                <span class="badge bg-success-subtle text-success">Approved</span>
-                            {% elif entry.approval_status == 'Rejected' %}
-                                <span class="badge bg-danger-subtle text-danger">Rejected</span>
+                            <span class="badge bg-light text-dark border">{{ entry.work_type or 'General' }}</span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar-sm bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; font-size: 10px;">
+                                    {{ (entry.supervisor_name or 'S')[0] | upper }}
+                                </div>
+                                <span class="small">{{ entry.supervisor_name or 'System' }}</span>
+                            </div>
+                        </td>
+                        <td>{{ entry.hours_worked }}h</td>
+                        <td class="fw-bold text-primary">₹{{ "{:,.0f}".format(entry.wage_calculated) }}</td>
+                        <td>
+                            {% if entry.photo_path %}
+                                <a href="{{ url_for('static', filename=entry.photo_path) }}" target="_blank" class="text-decoration-none">
+                                    <img src="{{ url_for('static', filename=entry.photo_path) }}" class="rounded shadow-sm" style="width: 40px; height: 40px; object-fit: cover;" alt="Proof">
+                                </a>
                             {% else %}
-                                <span class="badge bg-warning-subtle text-warning">In Review</span>
+                                <span class="text-muted small">No Photo</span>
                             {% endif %}
                         </td>
                         <td>
-                            <span class="badge {{ 'bg-success' if entry.status == 'Paid' else 'bg-secondary' }}">
-                                {{ entry.status }}
-                            </span>
+                            <div class="d-flex flex-column gap-1">
+                                {% if entry.approval_status == 'Approved' %}
+                                    <span class="badge bg-success-subtle text-success small">{{ _('approved') }}</span>
+                                {% elif entry.approval_status == 'Rejected' %}
+                                    <span class="badge bg-danger-subtle text-danger small">{{ _('rejected') }}</span>
+                                {% else %}
+                                    <span class="badge bg-warning-subtle text-warning small">{{ _('pending_review') }}</span>
+                                {% endif %}
+                                
+                                <span class="badge {{ 'bg-success' if entry.status == 'Paid' else 'bg-secondary bg-opacity-25 text-dark' }} x-small">
+                                    {{ _('paid') if entry.status == 'Paid' else _('pending_payment') }}
+                                </span>
+                            </div>
                         </td>
                         <td class="pe-4">
                             {% if entry.admin_remark %}
                                 <div class="p-2 small bg-secondary bg-opacity-10 rounded border-start border-3 {{ 'border-danger' if entry.approval_status == 'Rejected' else 'border-primary' }}">
-    <strong>Admin:</strong> <span class="text-body">{{ entry.admin_remark }}</span>
+    <strong>{{ _('admin') }}:</strong> <span class="text-body">{{ entry.admin_remark }}</span>
 </div>
                             {% else %}
-                                <span class="text-muted small">No notes</span>
+                                <span class="text-muted small">{{ _('no_notes') }}</span>
                             {% endif %}
                         </td>
                     </tr>

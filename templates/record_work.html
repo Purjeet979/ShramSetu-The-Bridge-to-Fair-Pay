@@ -13,35 +13,70 @@
                     <p class="text-muted small">Log hours to calculate wages automatically</p>
                 </div>
 
-                <form method="POST" action="/record_work" id="recordWorkForm">
-
-                    <div class="mb-4">
+                <form method="POST" action="/record_work" id="recordWorkForm" enctype="multipart/form-data">
+                    <div class="mb-3">
                         <label class="form-label fw-bold small text-uppercase text-muted">Select Worker</label>
-                        <select name="worker_id" class="form-select form-select-lg select2-worker" required>
-                            <option value="" disabled selected>Search by name or type...</option>
+                        <select name="worker_id" id="workerSelect" class="form-select select2-worker" onchange="updateWage()" required>
+                            <option value="" disabled selected>Search by name...</option>
                             {% for worker in workers %}
-                                <option value="{{ worker.worker_id }}">
-                                    {{ worker.name }} ({{ worker.worker_type }})
+                                <option value="{{ worker.worker_id }}" data-rate="{{ worker.wage_rate }}" data-type="{{ worker.worker_type }}">
+                                    {{ worker.name }} ({{ worker.worker_type }}) - ₹{{ worker.wage_rate }}/hr
                                 </option>
                             {% endfor %}
                         </select>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="form-label fw-bold small text-uppercase text-muted">Hours Worked</label>
-                        <div class="input-group input-group-lg">
-                            <input type="number" step="0.1" name="hours" class="form-control" placeholder="e.g. 8.5" required>
-
-                            <span class="input-group-text border-start-0 text-muted small">Hrs</span>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Date</label>
+                            <input type="date" name="work_date" class="form-control" value="{{ today_date }}" required>
                         </div>
-                        <div class="form-text mt-2 text-warning">
-                        <i class="fa-solid fa-circle-info me-1"></i> Overtime logic applies automatically > 8 hours.
+                        <div class="col-6">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Work Type</label>
+                            <select name="work_type" class="form-select">
+                                <option value="Construction">Construction</option>
+                                <option value="Cleaning">Cleaning</option>
+                                <option value="Maintenance">Maintenance</option>
+                                <option value="Loading/Unloading">Loading</option>
+                                <option value="Other">Other</option>
+                            </select>
                         </div>
                     </div>
 
-                    <div class="d-grid mt-4">
-                        <button type="submit" class="btn btn-warning text-white btn-lg shadow-warning">
-                            <i class="fa-solid fa-calculator me-2"></i>Calculate & Save
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Hours Worked</label>
+                        <div class="input-group">
+                            <input type="number" step="0.1" name="hours" id="hoursInput" class="form-control" placeholder="e.g. 8" oninput="updateWage()" required>
+                            <span class="input-group-text">Hrs</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-uppercase text-muted" id="photoLabel">Upload Site Photo</label>
+                        <input type="file" name="photo" id="photoInput" class="form-control" accept="image/*">
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase text-muted">GPS Verification</label>
+                        <button type="button" id="gpsBtn" class="btn btn-outline-info w-100 d-flex align-items-center justify-content-center gap-2 py-2" onclick="getLocation()">
+                            <i class="fa-solid fa-location-dot"></i> <span id="gpsStatus">Verify My Location</span>
+                        </button>
+                        <input type="hidden" name="gps_location" id="gpsInput">
+                        <div id="gpsCoords" class="small text-muted mt-1 text-center d-none"></div>
+                    </div>
+
+                    <div class="card bg-light border-0 mb-4 d-none" id="wagePreview">
+                        <div class="card-body py-2 px-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-muted small fw-bold text-uppercase">Est. Wage:</span>
+                                <span class="text-success fw-bold fs-5">₹<span id="wageAmount">0</span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-warning text-white btn-lg shadow-sm fw-bold">
+                            Submit Work Entry
                         </button>
                     </div>
                 </form>
@@ -77,22 +112,84 @@
 <script>
     $(document).ready(function() {
         $('.select2-worker').select2({
-            theme: 'bootstrap-5', // Uses the theme link we added in base.html
-            placeholder: "Search by name or type...",
+            theme: 'bootstrap-5',
+            placeholder: "Search by name...",
             allowClear: true,
             width: '100%'
         });
-
-        // Re-initialize or adjust Select2 if theme changes (optional)
-        $('#theme-toggle').on('click', function() {
-            // Small delay to allow CSS variables to update
-            setTimeout(() => {
-                $('.select2-worker').select2({
-                    theme: 'bootstrap-5',
-                    width: '100%'
-                });
-            }, 100);
-        });
     });
+
+    function getLocation() {
+        const status = document.getElementById("gpsStatus");
+        const coords = document.getElementById("gpsCoords");
+        const input = document.getElementById("gpsInput");
+
+        if (!navigator.geolocation) {
+            status.textContent = "GPS not supported";
+            return;
+        }
+
+        status.textContent = "Locating...";
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude.toFixed(6);
+                const lng = position.coords.longitude.toFixed(6);
+                input.value = `${lat},${lng}`;
+                status.textContent = "Location Verified";
+                
+                const btn = document.getElementById("gpsBtn");
+                btn.classList.remove("btn-outline-info", "btn-danger");
+                btn.classList.add("btn-success", "text-white");
+                
+                coords.textContent = `Lat: ${lat}, Lng: ${lng}`;
+                coords.classList.remove("d-none");
+            },
+            () => {
+                status.textContent = "Verification Failed";
+                const btn = document.getElementById("gpsBtn");
+                btn.classList.remove("btn-outline-info", "btn-success");
+                btn.classList.add("btn-danger", "text-white");
+            }
+        );
+    }
+
+    function updateWage() {
+        const select = document.getElementById("workerSelect");
+        const hoursInput = document.getElementById("hoursInput");
+        const preview = document.getElementById("wagePreview");
+        const amountDisplay = document.getElementById("wageAmount");
+
+        const selectedOption = select.options[select.selectedIndex];
+        if (!selectedOption.value || !hoursInput.value) {
+            preview.classList.add("d-none");
+            return;
+        }
+
+        const rate = parseFloat(selectedOption.getAttribute("data-rate"));
+        const type = selectedOption.getAttribute("data-type");
+        const hours = parseFloat(hoursInput.value);
+
+        // CONDITIONAL PHOTO REQUIREMENT
+        const photoInput = document.getElementById("photoInput");
+        const photoLabel = document.getElementById("photoLabel");
+        
+        if (hours > 8) {
+            photoInput.required = true;
+            photoLabel.innerHTML = 'Upload Site Photo <span class="text-danger">* (Required for OT)</span>';
+        } else {
+            photoInput.required = false;
+            photoLabel.innerHTML = 'Upload Site Photo';
+        }
+
+        let wage = 0;
+        if (type === "Skilled") {
+            wage = hours > 8 ? (8 * rate) + ((hours - 8) * rate * 2) : (hours * rate);
+        } else {
+            wage = hours > 8 ? (8 * rate) + ((hours - 8) * rate * 1.5) : (hours * rate);
+        }
+
+        amountDisplay.textContent = Math.round(wage);
+        preview.classList.remove("d-none");
+    }
 </script>
 {% endblock %}

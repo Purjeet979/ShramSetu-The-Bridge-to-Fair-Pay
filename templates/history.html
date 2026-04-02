@@ -2,35 +2,49 @@
 
 {% block content %}
 <div class="container page-animate">
-    <h2 class="fw-bold mb-4"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>Work History</h2>
+    <h2 class="fw-bold mb-4"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>{{ _('work_history') }}</h2>
 
     <div class="card shadow-sm border-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0" style="background: transparent;">
                 <thead style="background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(10px);">
                     <tr class="small fw-bold text-muted text-uppercase">
-                        <th class="ps-4">Date</th>
-                        {% if session['user_role'] != 'Worker' %} <th>Worker</th> {% endif %}
-                        <th>Hours</th>
-                        <th>Wage</th>
-                        <th>Approval</th>
-                        <th class="pe-4">Admin Remarks</th>
+                        <th class="ps-4">{{ _('date') }}</th>
+                        {% if session['user_role'] != 'Worker' %} <th>{{ _('worker') }}</th> {% endif %}
+                        <th>{{ _('type') }}</th>
+                        <th>{{ _('supervisor') }}</th>
+                        <th>{{ _('hours') }}</th>
+                        <th>{{ _('amount') }}</th>
+                        <th>{{ _('proof') }}</th>
+                        <th>{{ _('approval') }}</th>
+                        <th class="pe-4">{{ _('admin_remarks') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in history %}
                     <tr>
                         <td class="ps-4">{{ item.work_date }}</td>
-                        {% if session['user_role'] != 'Worker' %} <td class="fw-bold">{{ item.name }}</td> {% endif %}
+                        {% if session['user_role'] != 'Worker' %} <td class="fw-bold">{{ item.worker_name }}</td> {% endif %}
+                        <td><span class="badge bg-light text-dark border">{{ item.work_type or 'General' }}</span></td>
+                        <td><small>{{ item.supervisor_name or 'System' }}</small></td>
                         <td><span class="badge text-dark fw-bold border" style="background: rgba(255,255,255,0.5);">{{ item.hours_worked }}h</span></td>
                         <td class="text-primary fw-bold">₹{{ item.wage_calculated }}</td>
                         <td>
-                            {% if item.approval_status == 'Approved' %}
-                                <span class="badge bg-success-subtle text-success">Approved</span>
-                            {% elif item.approval_status == 'Rejected' %}
-                                <span class="badge bg-danger-subtle text-danger">Rejected</span>
+                            {% if item.photo_path %}
+                                <a href="{{ url_for('static', filename=item.photo_path) }}" target="_blank">
+                                    <img src="{{ url_for('static', filename=item.photo_path) }}" class="rounded shadow-sm" style="width: 32px; height: 32px; object-fit: cover;">
+                                </a>
                             {% else %}
-                                <span class="badge bg-warning-subtle text-warning">Pending Review</span>
+                                <span class="text-muted extra-small">No Photo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.approval_status == 'Approved' %}
+                                <span class="badge bg-success-subtle text-success">{{ _('approved') }}</span>
+                            {% elif item.approval_status == 'Rejected' %}
+                                <span class="badge bg-danger-subtle text-danger">{{ _('rejected') }}</span>
+                            {% else %}
+                                <span class="badge bg-warning-subtle text-warning">{{ _('pending_review') }}</span>
                             {% endif %}
                         </td>
                         <td class="pe-4">

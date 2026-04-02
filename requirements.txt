@@ -1,0 +1,9 @@
+flask
+flask-jwt-extended
+authlib
+mysql-connector-python
+requests
+pandas
+python-dotenv
+openpyxl
+cryptography
