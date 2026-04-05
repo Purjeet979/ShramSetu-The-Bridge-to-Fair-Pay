@@ -1,63 +1,95 @@
 {% extends 'base.html' %}
+{% block title %}Approve Logs — ShramSetu{% endblock %}
+
+{% block extra_head %}
+<style>
+    .approve-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+    .log-count { background: var(--saffron-light); color: var(--saffron-dark); padding: 6px 16px; border-radius: 100px; font-size: 0.8rem; font-weight: 700; }
+    .approve-table-wrap { border-radius: 16px; border: 1px solid var(--border); background: var(--card-bg); overflow: hidden; }
+    .proof-thumb { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1.5px solid var(--border); transition: transform 0.2s; }
+    .proof-thumb:hover { transform: scale(1.05); }
+    .worker-cell { display: flex; align-items: center; gap: 10px; }
+    .worker-avatar-sm { width: 34px; height: 34px; border-radius: 50%; background: var(--saffron-light); color: var(--saffron-dark); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; flex-shrink: 0; }
+    .hours-badge { background: var(--amber-light); color: #9a6f00; padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; }
+    .wage-cell { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--saffron); font-size: 0.95rem; }
+    .actions-cell { display: flex; gap: 0.5rem; justify-content: flex-end; }
+    .empty-row td { padding: 4rem 2rem; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="fw-bold"><i class="fa-solid fa-user-check text-primary me-2"></i>Review Work Logs</h2>
-    <span class="badge bg-primary rounded-pill px-3 py-2">{{ logs|length }} Overtime Requests</span>
+<div class="approve-header">
+    <div class="page-header" style="margin:0;">
+        <h2><i class="fa-solid fa-user-check me-2" style="color:var(--saffron);"></i>Review Work Logs</h2>
+        <p>Approve or reject overtime work submissions</p>
+    </div>
+    <div class="log-count"><i class="fa-solid fa-clock me-1"></i>{{ logs|length }} Pending</div>
 </div>
 
-<div class="card shadow-sm border-0">
+<div class="approve-table-wrap">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
-            <thead class="bg-light">
-                <tr class="small fw-bold text-muted text-uppercase">
+            <thead>
+                <tr>
                     <th class="ps-4">Worker</th>
                     <th>Supervisor</th>
                     <th>Date</th>
                     <th>Hours</th>
                     <th>Proof</th>
-                    <th>Calculated Wage</th>
-                    <th class="text-end pe-4">Actions</th>
+                    <th>Wage</th>
+                    <th class="pe-4 text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for log in logs %}
                 <tr>
                     <td class="ps-4">
-                        <div class="fw-bold">{{ log.worker_name }}</div>
-                        <small class="text-muted">{{ log.worker_type }}</small>
+                        <div class="worker-cell">
+                            <div class="worker-avatar-sm">{{ log.worker_name[0]|upper }}</div>
+                            <div>
+                                <div style="font-weight:600; font-size:0.875rem;">{{ log.worker_name }}</div>
+                                <div style="font-size:0.72rem; color:var(--text-muted);">{{ log.worker_type }}</div>
+                            </div>
+                        </div>
                     </td>
-                    <td>
-                        <div class="small fw-bold text-muted">{{ log.supervisor_name or 'System' }}</div>
-                    </td>
-                    <td>{{ log.work_date }}</td>
-                    <td><span class="badge bg-light text-dark border">{{ log.hours_worked }}h</span></td>
+                    <td style="font-size:0.83rem; color:var(--text-muted); font-weight:500;">{{ log.supervisor_name or 'System' }}</td>
+                    <td style="font-size:0.875rem;">{{ log.work_date }}</td>
+                    <td><span class="hours-badge">{{ log.hours_worked }}h</span></td>
                     <td>
                         {% if log.photo_path %}
                         <a href="/{{ log.photo_path }}" target="_blank">
-                            <img src="/{{ log.photo_path }}" class="rounded shadow-sm" style="width: 40px; height: 40px; object-fit: cover;">
+                            <img src="/{{ log.photo_path }}" class="proof-thumb">
                         </a>
                         {% else %}
-                        <span class="text-muted small italic">No Photo</span>
+                        <span style="font-size:0.78rem; color:var(--text-muted);">No photo</span>
                         {% endif %}
                     </td>
-                    <td class="text-primary fw-bold">₹{{ log.wage_calculated }}</td>
-                    <td class="text-end pe-4">
-                        <form action="/admin/verify_entry/{{ log.entry_id }}" method="POST" class="d-inline">
-                            <input type="hidden" name="action" value="Approved">
-                            <input type="hidden" name="remark" value="Work Verified">
-                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">Approve</button>
-                        </form>
-
-                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3"
-                                data-bs-toggle="modal" data-bs-target="#rejectModal{{ log.entry_id }}">
-                            Reject
-                        </button>
+                    <td class="wage-cell">₹{{ log.wage_calculated }}</td>
+                    <td class="pe-4">
+                        <div class="actions-cell">
+                            <form action="/admin/verify_entry/{{ log.entry_id }}" method="POST" class="d-inline">
+                                <input type="hidden" name="action" value="Approved">
+                                <input type="hidden" name="remark" value="Work Verified">
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    <i class="fa-solid fa-check me-1"></i>Approve
+                                </button>
+                            </form>
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                    data-bs-toggle="modal" data-bs-target="#rejectModal{{ log.entry_id }}">
+                                <i class="fa-solid fa-xmark me-1"></i>Reject
+                            </button>
+                        </div>
                     </td>
                 </tr>
                 {% else %}
-                <tr>
-                    <td colspan="5" class="text-center py-5 text-muted">No pending logs found for review.</td>
+                <tr class="empty-row">
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <h5>All Caught Up!</h5>
+                            <p>No pending overtime logs to review right now.</p>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -65,23 +97,26 @@
     </div>
 </div>
 
+<!-- Reject Modals -->
 {% for log in logs %}
 <div class="modal fade" id="rejectModal{{ log.entry_id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form action="/admin/verify_entry/{{ log.entry_id }}" method="POST">
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Rejection Reason</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title"><i class="fa-solid fa-triangle-exclamation me-2" style="color:var(--saffron);"></i>Rejection Reason</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body text-start">
-                    <p class="small text-muted">Why are you rejecting this entry for <strong>{{ log.worker_name }}</strong>?</p>
+                <div class="modal-body">
+                    <p style="font-size:0.875rem; color:var(--text-muted); margin-bottom:1rem;">
+                        Why are you rejecting this entry for <strong>{{ log.worker_name }}</strong>?
+                    </p>
                     <input type="hidden" name="action" value="Rejected">
-                    <textarea name="remark" class="form-control" rows="3" placeholder="e.g. Incomplete work, Late arrival..." required></textarea>
+                    <textarea name="remark" class="form-control" rows="3" placeholder="e.g. Incomplete work, unclear photo..." required></textarea>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Confirm Reject</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-danger"><i class="fa-solid fa-xmark me-1"></i>Confirm Reject</button>
                 </div>
             </form>
         </div>
@@ -90,13 +125,8 @@
 {% endfor %}
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Yeh code saare modals ko animation wale dibbe se nikal kar body ke end mein daal dega
-        // Jisse backdrop aur z-index ka issue solve ho jayega!
-        const modals = document.querySelectorAll('.modal');
-        modals.forEach(function(modal) {
-            document.body.appendChild(modal);
-        });
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.modal').forEach(m => document.body.appendChild(m));
+});
 </script>
 {% endblock %}

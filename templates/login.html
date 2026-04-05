@@ -152,7 +152,7 @@
                     <p class="text-muted">Enter your credentials to access Shram Setu</p>
                 </div>
 
-                <form method="POST">
+                <form method="POST" action="{{ url_for('worker_login') }}">
                     <div class="mb-3">
                         <label class="form-label small fw-bold">Email or Phone</label>
                         <div class="input-group">
@@ -173,7 +173,7 @@
                     </div>
                     <div class="d-grid mb-3">
                         <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm pb-2 pt-2"
-                            style="font-size: 1.1rem;">Sign In</button>
+                            style="font-size: 1.1rem;" href="worker_dashboard.html">Sign In</button>
                     </div>
 
                     <div class="text-center mt-4 pt-4 border-top">

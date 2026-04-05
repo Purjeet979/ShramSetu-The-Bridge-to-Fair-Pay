@@ -1,68 +1,96 @@
 {% extends 'base.html' %}
+{% block title %}Work History — ShramSetu{% endblock %}
+
+{% block extra_head %}
+<style>
+    .history-wrap { border-radius: 16px; border: 1px solid var(--border); background: var(--card-bg); overflow: hidden; }
+    .history-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .history-header h5 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin: 0; }
+    .proof-thumb { width: 32px; height: 32px; border-radius: 6px; object-fit: cover; border: 1.5px solid var(--border); }
+    .hours-pill { background: var(--cream); border: 1px solid var(--border); color: var(--text-primary); padding: 3px 10px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; }
+    [data-theme="dark"] .hours-pill { background: var(--input-bg); }
+    .wage-cell { font-family: 'Syne', sans-serif; font-weight: 700; color: var(--saffron); }
+    .remark-cell { font-size: 0.78rem; color: var(--text-muted); font-style: italic; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container page-animate">
-    <h2 class="fw-bold mb-4"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>{{ _('work_history') }}</h2>
+<div class="page-header">
+    <h2><i class="fa-solid fa-clock-rotate-left me-2" style="color:var(--saffron);"></i>{{ _('work_history') }}</h2>
+    <p>Complete record of all logged work sessions</p>
+</div>
 
-    <div class="card shadow-sm border-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0" style="background: transparent;">
-                <thead style="background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(10px);">
-                    <tr class="small fw-bold text-muted text-uppercase">
-                        <th class="ps-4">{{ _('date') }}</th>
-                        {% if session['user_role'] != 'Worker' %} <th>{{ _('worker') }}</th> {% endif %}
-                        <th>{{ _('type') }}</th>
-                        <th>{{ _('supervisor') }}</th>
-                        <th>{{ _('hours') }}</th>
-                        <th>{{ _('amount') }}</th>
-                        <th>{{ _('proof') }}</th>
-                        <th>{{ _('approval') }}</th>
-                        <th class="pe-4">{{ _('admin_remarks') }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in history %}
-                    <tr>
-                        <td class="ps-4">{{ item.work_date }}</td>
-                        {% if session['user_role'] != 'Worker' %} <td class="fw-bold">{{ item.worker_name }}</td> {% endif %}
-                        <td><span class="badge bg-light text-dark border">{{ item.work_type or 'General' }}</span></td>
-                        <td><small>{{ item.supervisor_name or 'System' }}</small></td>
-                        <td><span class="badge text-dark fw-bold border" style="background: rgba(255,255,255,0.5);">{{ item.hours_worked }}h</span></td>
-                        <td class="text-primary fw-bold">₹{{ item.wage_calculated }}</td>
-                        <td>
-                            {% if item.photo_path %}
-                                <a href="{{ url_for('static', filename=item.photo_path) }}" target="_blank">
-                                    <img src="{{ url_for('static', filename=item.photo_path) }}" class="rounded shadow-sm" style="width: 32px; height: 32px; object-fit: cover;">
-                                </a>
-                            {% else %}
-                                <span class="text-muted extra-small">No Photo</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if item.approval_status == 'Approved' %}
-                                <span class="badge bg-success-subtle text-success">{{ _('approved') }}</span>
-                            {% elif item.approval_status == 'Rejected' %}
-                                <span class="badge bg-danger-subtle text-danger">{{ _('rejected') }}</span>
-                            {% else %}
-                                <span class="badge bg-warning-subtle text-warning">{{ _('pending_review') }}</span>
-                            {% endif %}
-                        </td>
-                        <td class="pe-4">
-                            {% if item.admin_remark %}
-                                <small class="text-muted italic">"{{ item.admin_remark }}"</small>
-                            {% else %}
-                                <span class="text-muted">--</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="6" class="text-center py-5 text-muted">No history found.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+<div class="history-wrap">
+    <div class="history-header">
+        <h5>All Records</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th class="ps-4">{{ _('date') }}</th>
+                    {% if session['user_role'] != 'Worker' %}<th>{{ _('worker') }}</th>{% endif %}
+                    <th>{{ _('type') }}</th>
+                    <th>{{ _('supervisor') }}</th>
+                    <th>{{ _('hours') }}</th>
+                    <th>{{ _('amount') }}</th>
+                    <th>{{ _('proof') }}</th>
+                    <th>{{ _('approval') }}</th>
+                    <th class="pe-4">{{ _('admin_remarks') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in history %}
+                <tr>
+                    <td class="ps-4" style="font-size:0.875rem; font-weight:500;">{{ item.work_date }}</td>
+                    {% if session['user_role'] != 'Worker' %}
+                    <td style="font-weight:600; font-size:0.875rem;">{{ item.worker_name }}</td>
+                    {% endif %}
+                    <td>
+                        <span class="badge" style="background:var(--saffron-light); color:var(--saffron-dark);">{{ item.work_type or 'General' }}</span>
+                    </td>
+                    <td style="font-size:0.82rem; color:var(--text-muted);">{{ item.supervisor_name or 'System' }}</td>
+                    <td><span class="hours-pill">{{ item.hours_worked }}h</span></td>
+                    <td class="wage-cell">₹{{ item.wage_calculated }}</td>
+                    <td>
+                        {% if item.photo_path %}
+                            <a href="{{ url_for('static', filename=item.photo_path) }}" target="_blank">
+                                <img src="{{ url_for('static', filename=item.photo_path) }}" class="proof-thumb">
+                            </a>
+                        {% else %}
+                            <span style="font-size:0.78rem; color:var(--text-muted);">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.approval_status == 'Approved' %}
+                            <span class="badge status-approved">{{ _('approved') }}</span>
+                        {% elif item.approval_status == 'Rejected' %}
+                            <span class="badge status-rejected">{{ _('rejected') }}</span>
+                        {% else %}
+                            <span class="badge status-pending">{{ _('pending_review') }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="pe-4">
+                        {% if item.admin_remark %}
+                            <span class="remark-cell" title="{{ item.admin_remark }}">"{{ item.admin_remark }}"</span>
+                        {% else %}
+                            <span style="color:var(--text-muted); font-size:0.8rem;">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="9">
+                        <div class="empty-state">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            <h5>No History Found</h5>
+                            <p>Work records will appear here once entries are logged.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}

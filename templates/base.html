@@ -1,361 +1,466 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="light">
-
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shram Setu | Digital Wage Protection</title>
+    <title>{% block title %}ShramSetu — Fair Pay for Every Hour{% endblock %}</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Montserrat:wght@500;700;800&display=swap"
-        rel="stylesheet">
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"/>
 
     <style>
         :root {
-            --primary: #2563eb;
-            --secondary: #f59e0b;
-            --dark: #1e293b;
-
-            /* Glassmorphism Tokens */
-            --glass-bg: rgba(255, 255, 255, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.5);
-            --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
-            --glass-blur: blur(16px);
-
-            --nav-bg: rgba(255, 255, 255, 0.85);
-            --input-bg: rgba(255, 255, 255, 0.9);
+            --saffron:       #E8722A;
+            --saffron-dark:  #c45e1a;
+            --saffron-light: #fde8d8;
+            --saffron-faint: #fff5ee;
+            --earth:         #2C1A0E;
+            --earth-mid:     #5C3A1E;
+            --earth-light:   #8a6040;
+            --jade:          #2D7A4F;
+            --jade-light:    #d4f0e1;
+            --jade-faint:    #f0faf5;
+            --sky:           #1A6B9A;
+            --sky-light:     #dff0fb;
+            --amber:         #D4A017;
+            --amber-light:   #fdf4d4;
+            --cream:         #FBF5EE;
+            --warm-white:    #FFFBF7;
+            --card-bg:       #ffffff;
+            --border:        rgba(44,26,14,0.1);
+            --shadow-sm:     0 2px 12px rgba(44,26,14,0.07);
+            --shadow-md:     0 8px 32px rgba(44,26,14,0.1);
+            --shadow-lg:     0 20px 60px rgba(44,26,14,0.13);
+            --nav-bg:        rgba(255,251,247,0.96);
+            --input-bg:      #ffffff;
+            --text-primary:  #2C1A0E;
+            --text-muted:    #8a6040;
+            --body-bg:       #FBF5EE;
         }
 
-        [data-bs-theme="dark"] {
-            /* Dark Mode Fallback */
-            --glass-bg: rgba(30, 41, 59, 0.75);
-            --glass-border: rgba(255, 255, 255, 0.05);
-            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            --dark: #f1f5f9;
-            --nav-bg: rgba(15, 23, 42, 0.85);
-            --input-bg: rgba(15, 23, 42, 0.6);
+        [data-theme="dark"] {
+            --saffron-light: rgba(232,114,42,0.2);
+            --saffron-faint: rgba(232,114,42,0.08);
+            --jade-light:    rgba(45,122,79,0.2);
+            --jade-faint:    rgba(45,122,79,0.08);
+            --sky-light:     rgba(26,107,154,0.2);
+            --amber-light:   rgba(212,160,23,0.15);
+            --cream:         #1a1208;
+            --warm-white:    #120d06;
+            --card-bg:       #1e1409;
+            --border:        rgba(255,200,150,0.08);
+            --shadow-sm:     0 2px 12px rgba(0,0,0,0.3);
+            --shadow-md:     0 8px 32px rgba(0,0,0,0.4);
+            --shadow-lg:     0 20px 60px rgba(0,0,0,0.5);
+            --nav-bg:        rgba(28,16,8,0.97);
+            --input-bg:      #261608;
+            --text-primary:  #f5e6d0;
+            --text-muted:    #c4956a;
+            --body-bg:       #120d06;
         }
+
+        *, *::before, *::after { box-sizing: border-box; }
 
         body {
-            /* Light Mode Photo Background */
-            background-image: linear-gradient(rgba(240, 244, 248, 0.85), rgba(240, 244, 248, 0.95)),
-            url("{{ url_for('static', filename='images/worker_bg.png') }}");
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-
-            font-family: 'Inter', sans-serif;
-            color: var(--dark);
+            font-family: 'DM Sans', sans-serif;
+            background-color: var(--body-bg);
+            color: var(--text-primary);
             min-height: 100vh;
             margin: 0;
-            transition: all 0.3s ease;
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
         }
 
-        [data-bs-theme="dark"] body {
-            /* Dark Mode Gradient Fallback */
-            background-image: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
-        }
+        h1, h2, h3, h4, h5, .font-display, .navbar-brand { font-family: 'Syne', sans-serif; }
 
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        .navbar-brand {
-            font-family: 'Montserrat', sans-serif;
-        }
+        /* ─── SCROLLBAR ─── */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: var(--cream); }
+        ::-webkit-scrollbar-thumb { background: var(--saffron); border-radius: 3px; }
 
-        /* --- Global Glassmorphism Layout --- */
+        /* ─── NAVBAR ─── */
         .navbar {
-            background-color: var(--nav-bg) !important;
+            background: var(--nav-bg) !important;
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
-            border-bottom: 1px solid var(--glass-border);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
-            padding: 1rem 0;
-            transition: all 0.3s ease;
-        }
-
-        .navbar-brand {
-            font-weight: 800;
-            color: var(--primary) !important;
-            font-size: 1.5rem;
-            letter-spacing: -0.5px;
-        }
-
-        .nav-link {
-            font-weight: 600;
-            color: #64748b !important;
-            margin-left: 15px;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        [data-bs-theme="dark"] .nav-link {
-            color: #94a3b8 !important;
-        }
-
-        .nav-link:hover,
-        .nav-link.active-tab {
-            color: var(--primary) !important;
-        }
-
-        .nav-link.active-tab::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 3px;
-            bottom: -5px;
-            left: 0;
-            background-color: var(--primary);
-            border-radius: 2px;
-            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
-        }
-
-        .btn-nav {
-            background-color: var(--primary);
-            color: white !important;
-            padding: 8px 24px;
-            border-radius: 50px;
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.25);
-            transition: all 0.3s ease;
-        }
-
-        .btn-nav:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
-        }
-
-        /* Essential Buttons */
-        .btn {
-            border-radius: 12px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-            padding: 10px 20px;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .btn-primary {
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-        }
-
-        .btn-success {
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-        }
-
-        .btn-warning {
-            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
-        }
-
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        }
-
-        .btn-loading {
-            pointer-events: none;
-            opacity: 0.7;
-        }
-
-        /* Premium Glass Cards */
-        .card {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            -webkit-backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            box-shadow: var(--glass-shadow);
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
-        }
-
-        .card.feature-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        }
-
-        .form-control,
-        .form-select {
-            border-radius: 12px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            padding: 14px 18px;
-            background-color: var(--input-bg);
-            color: var(--dark);
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus,
-        .form-select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
-            transform: translateY(-1px);
-        }
-
-        [data-bs-theme="dark"] .form-control,
-        [data-bs-theme="dark"] .form-select {
-            border-color: #334155;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Page Transition Animation */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .page-animate {
-            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        /* Theme Toggle Button Style */
-        #theme-toggle {
-            cursor: pointer;
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.03);
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 2px 20px rgba(44,26,14,0.06);
+            padding: 0.75rem 0;
             transition: all 0.3s;
         }
+        .navbar-brand {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: var(--earth) !important;
+            letter-spacing: -0.3px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        [data-theme="dark"] .navbar-brand { color: var(--text-primary) !important; }
+        .brand-icon {
+            width: 34px; height: 34px; border-radius: 9px;
+            background: var(--saffron);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .nav-link {
+            font-weight: 500;
+            font-size: 0.88rem;
+            color: var(--earth-mid) !important;
+            padding: 6px 14px !important;
+            border-radius: 8px;
+            transition: all 0.2s;
+            margin: 0 2px;
+        }
+        [data-theme="dark"] .nav-link { color: var(--text-muted) !important; }
+        .nav-link:hover { background: var(--saffron-light); color: var(--saffron-dark) !important; }
+        .nav-link.active-tab { background: var(--saffron-light); color: var(--saffron) !important; font-weight: 600; }
 
-        #theme-toggle:hover {
-            background: rgba(0, 0, 0, 0.08);
-            transform: rotate(15deg);
+        .nav-pill {
+            background: var(--saffron) !important;
+            color: white !important;
+            font-weight: 600;
+            padding: 7px 18px !important;
+            border-radius: 50px !important;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .nav-pill:hover { background: var(--saffron-dark) !important; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(232,114,42,0.35); }
+
+        .dropdown-menu {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: var(--shadow-md);
+            background: var(--card-bg);
+            padding: 0.4rem;
+            min-width: 170px;
+        }
+        .dropdown-item {
+            border-radius: 9px;
+            font-size: 0.875rem;
+            padding: 8px 12px;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.15s;
+        }
+        .dropdown-item:hover { background: var(--saffron-light); color: var(--saffron-dark); }
+        .dropdown-item.text-danger:hover { background: #fde8e8; color: #c0392b !important; }
+
+        /* ─── THEME TOGGLE ─── */
+        #theme-toggle {
+            width: 38px; height: 38px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 10px;
+            background: var(--cream);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.25s;
+            color: var(--earth-mid);
+        }
+        #theme-toggle:hover { background: var(--saffron-light); color: var(--saffron); transform: rotate(12deg); }
+
+        /* ─── BUTTONS ─── */
+        .btn {
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            border-radius: 10px;
+            transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
+            letter-spacing: 0.01em;
+        }
+        .btn:hover { transform: translateY(-2px); }
+        .btn:active { transform: translateY(0); }
+
+        .btn-primary {
+            background: var(--saffron);
+            border-color: var(--saffron);
+            color: white;
+            box-shadow: 0 4px 14px rgba(232,114,42,0.25);
+        }
+        .btn-primary:hover { background: var(--saffron-dark); border-color: var(--saffron-dark); box-shadow: 0 8px 24px rgba(232,114,42,0.35); }
+
+        .btn-success {
+            background: var(--jade);
+            border-color: var(--jade);
+            box-shadow: 0 4px 14px rgba(45,122,79,0.2);
+        }
+        .btn-success:hover { background: #236040; border-color: #236040; }
+
+        .btn-warning {
+            background: var(--amber);
+            border-color: var(--amber);
+            color: white;
+            box-shadow: 0 4px 14px rgba(212,160,23,0.2);
+        }
+        .btn-warning:hover { background: #b8890f; border-color: #b8890f; color: white; }
+
+        .btn-outline-primary { border-color: var(--saffron); color: var(--saffron); }
+        .btn-outline-primary:hover { background: var(--saffron); border-color: var(--saffron); color: white; }
+        .btn-outline-success { border-color: var(--jade); color: var(--jade); }
+        .btn-outline-success:hover { background: var(--jade); border-color: var(--jade); color: white; }
+        .btn-outline-danger:hover { transform: translateY(-2px); }
+
+        .btn-sm { padding: 6px 14px; font-size: 0.8rem; border-radius: 8px; }
+        .btn-lg { padding: 13px 24px; font-size: 0.95rem; }
+
+        /* ─── CARDS ─── */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+        }
+        .card.feature-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+        .card-inner { padding: 1.5rem; }
+
+        /* ─── FORMS ─── */
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 1.5px solid var(--border);
+            padding: 11px 14px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--saffron);
+            box-shadow: 0 0 0 3px rgba(232,114,42,0.12);
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+        .form-label { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--earth-mid); margin-bottom: 0.4rem; }
+        [data-theme="dark"] .form-label { color: var(--text-muted); }
+        .input-group-text { background: var(--cream); border: 1.5px solid var(--border); color: var(--earth-mid); border-radius: 10px; }
+        [data-theme="dark"] .input-group-text { background: var(--input-bg); color: var(--text-muted); border-color: var(--border); }
+        .form-text { font-size: 0.78rem; color: var(--text-muted); }
+
+        /* ─── TABLES ─── */
+        .table { color: var(--text-primary); }
+        .table > :not(caption) > * > * { padding: 0.9rem 1rem; border-color: var(--border); }
+        .table thead tr { background: var(--cream); }
+        [data-theme="dark"] .table thead tr { background: rgba(255,200,150,0.04); }
+        .table-hover tbody tr:hover td { background: var(--saffron-faint); }
+        [data-theme="dark"] .table-hover tbody tr:hover td { background: rgba(232,114,42,0.05); }
+        .table th { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--earth-mid); }
+        [data-theme="dark"] .table th { color: var(--text-muted); }
+
+        /* ─── BADGES ─── */
+        .badge { font-weight: 600; font-size: 0.72rem; padding: 4px 10px; border-radius: 6px; }
+        .status-approved { background: var(--jade-light); color: var(--jade); }
+        .status-rejected { background: #fde8e8; color: #c0392b; }
+        .status-pending  { background: var(--amber-light); color: #9a6f00; }
+        .status-paid     { background: var(--jade-light); color: var(--jade); }
+
+        /* ─── STAT CARDS ─── */
+        .stat-card {
+            border-radius: 16px;
+            padding: 1.4rem 1.5rem;
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            transition: all 0.25s;
+        }
+        .stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        .stat-icon {
+            width: 46px; height: 46px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; margin-bottom: 1rem;
+        }
+        .stat-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 0.2rem; }
+        .stat-value { font-family: 'Syne', sans-serif; font-size: 1.75rem; font-weight: 800; color: var(--text-primary); line-height: 1; }
+
+        /* ─── PAGE HEADER ─── */
+        .page-header { margin-bottom: 2rem; }
+        .page-header h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 0.25rem; }
+        .page-header p { color: var(--text-muted); font-size: 0.9rem; margin: 0; }
+
+        /* ─── ALERTS ─── */
+        .alert {
+            border-radius: 12px;
+            border: 1px solid;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .alert-success { background: var(--jade-faint); border-color: var(--jade-light); color: var(--jade); }
+        .alert-danger  { background: #fde8e8; border-color: #f5c6c6; color: #c0392b; }
+
+        /* ─── MODAL ─── */
+        .modal-content { border-radius: 20px; border: 1px solid var(--border); background: var(--card-bg); box-shadow: var(--shadow-lg); }
+        .modal-header { border-bottom: 1px solid var(--border); padding: 1.25rem 1.5rem; }
+        .modal-footer { border-top: 1px solid var(--border); padding: 1rem 1.5rem; }
+        .modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem; }
+
+        /* ─── MAIN CONTENT WRAPPER ─── */
+        .main-wrap {
+            padding-top: 88px;
+            padding-bottom: 3rem;
+            min-height: 100vh;
         }
 
-        [data-bs-theme="dark"] #theme-toggle {
-            background: rgba(255, 255, 255, 0.05);
+        /* ─── PAGE ANIMATE ─── */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
+        .page-animate { animation: fadeInUp 0.5s cubic-bezier(0.16,1,0.3,1) both; }
 
-        [data-bs-theme="dark"] #theme-toggle:hover {
-            background: rgba(255, 255, 255, 0.15);
+        /* ─── EMPTY STATE ─── */
+        .empty-state { text-align: center; padding: 4rem 2rem; color: var(--text-muted); }
+        .empty-state i { font-size: 3rem; opacity: 0.2; margin-bottom: 1rem; display: block; }
+        .empty-state h5 { font-weight: 700; font-size: 1rem; margin-bottom: 0.4rem; }
+        .empty-state p { font-size: 0.875rem; }
+
+        /* ─── DARK MODE INPUT FIX ─── */
+        [data-theme="dark"] .form-control,
+        [data-theme="dark"] .form-select { background: var(--input-bg); color: var(--text-primary); border-color: var(--border); }
+        [data-theme="dark"] .form-control::placeholder { color: var(--text-muted); }
+        [data-theme="dark"] .card { background: var(--card-bg); border-color: var(--border); }
+        [data-theme="dark"] .dropdown-menu { background: var(--card-bg); border-color: var(--border); }
+        [data-theme="dark"] .dropdown-item { color: var(--text-primary); }
+        [data-theme="dark"] .modal-content { background: var(--card-bg); }
+        [data-theme="dark"] .text-muted { color: var(--text-muted) !important; }
+        [data-theme="dark"] .bg-light { background: rgba(255,200,150,0.05) !important; }
+        [data-theme="dark"] .table { --bs-table-striped-bg: transparent; }
+
+        /* ─── SELECT2 OVERRIDES ─── */
+        .select2-container--bootstrap-5 .select2-selection {
+            min-height: 46px;
+            padding: 9px 14px;
+            border-radius: 10px;
+            background: var(--input-bg);
+            border: 1.5px solid var(--border);
+            color: var(--text-primary);
         }
+        .select2-container--bootstrap-5 .select2-selection:focus,
+        .select2-container--bootstrap-5 .select2-selection--single:focus { border-color: var(--saffron); box-shadow: 0 0 0 3px rgba(232,114,42,0.12); }
+        [data-theme="dark"] .select2-dropdown,
+        [data-theme="dark"] .select2-selection { background-color: var(--input-bg) !important; color: var(--text-primary) !important; border-color: var(--border) !important; }
+        [data-theme="dark"] .select2-results__option { color: var(--text-primary); }
+        [data-theme="dark"] .select2-results__option--highlighted { background: var(--saffron-light) !important; color: var(--saffron-dark) !important; }
+
+        /* ─── UTILITY ─── */
+        .rounded-pill { border-radius: 50px !important; }
+        .border-saffron { border-color: var(--saffron) !important; }
+        .text-saffron { color: var(--saffron) !important; }
+        .bg-saffron { background: var(--saffron) !important; }
+        .text-jade { color: var(--jade) !important; }
+        .bg-jade { background: var(--jade) !important; }
     </style>
+    {% block extra_head %}{% endblock %}
 </head>
-
 <body>
 
-    <nav class="navbar navbar-expand-lg fixed-top">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="/">
-                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Shram Setu Logo" height="40"
-                    class="d-inline-block align-top me-2">
-                <span>SHRAM SETU</span>
-            </a>
-
-            <div class="d-flex align-items-center order-lg-3">
-                <!-- Language Toggle (Worker Pages Only) -->
-                {% if current_user and current_user.role == 'Worker' or request.path in ['/worker_login', '/verify_otp'] %}
-                <div class="dropdown me-2">
-                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle border-0" type="button" data-bs-toggle="dropdown">
-                        <i class="fa-solid fa-language me-1"></i>
-                        {{ 'हिन्दी' if session.get('lang') == 'hi' else 'EN' }}
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                        <li><a class="dropdown-item" href="/set_language/en">English</a></li>
-                        <li><a class="dropdown-item" href="/set_language/hi">हिन्दी (Hindi)</a></li>
-                    </ul>
-                </div>
-                {% endif %}
-
-                <div id="theme-toggle" class="me-2 text-muted">
-                    <i class="fa-solid fa-moon fs-5" id="theme-icon"></i>
-                </div>
-
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+<!-- ─── NAVBAR ─── -->
+<nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <div class="brand-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L4 7v10l8 5 8-5V7L12 2z" fill="white" opacity="0.95"/>
+                    <path d="M12 8v8M8 10.5l4 2 4-2" stroke="rgba(232,114,42,1)" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
             </div>
+            ShramSetu
+        </a>
 
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    {% if current_user %}
-
-                    <li class="nav-item"><a class="nav-link" href="/">{{ _('dashboard') }}</a></li>
-
-                    {% if current_user.role == 'Admin' %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fa-solid fa-plus me-1"></i> {{ _('register') }}
-                        </a>
-                        <ul class="dropdown-menu border-0 shadow-sm mt-2">
-                            <li><a class="dropdown-item py-2" href="/add_worker"><i
-                                         class="fa-solid fa-helmet-safety me-2 text-warning"></i>{{ _('worker') }}</a></li>
-                            <li><a class="dropdown-item py-2" href="/add_supervisor"><i
-                                         class="fa-solid fa-user-tie me-2 text-primary"></i>{{ _('supervisor') }}</a></li>
-                        </ul>
-                    </li>
-                    {% elif current_user.role == 'Supervisor' %}
-                    <li class="nav-item"><a class="nav-link" href="/add_worker"><i class="fa-solid fa-plus me-1"></i> {{ _('add_worker') }}</a></li>
-                    {% endif %}
-
-                    {% if current_user.role in ['Admin', 'Supervisor'] %}
-                    <li class="nav-item"><a class="nav-link" href="/record_work">{{ _('record_work') }}</a></li>
-                    {% endif %}
-
-                    {% if current_user.role == 'Admin' %}
-                    <li class="nav-item"><a class="nav-link" href="/admin/approve_logs">{{ _('approvals') }}</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/payments">{{ _('payments') }}</a></li>
-                    {% endif %}
-
-                    <li class="nav-item"><a class="nav-link" href="/history">{{ _('history') }}</a></li>
-
-                    <li class="nav-item ms-lg-3 dropdown">
-                        <a class="nav-link dropdown-toggle fw-bold text-primary d-flex align-items-center" href="#"
-                            role="button" data-bs-toggle="dropdown">
-                            <i class="fa-solid fa-circle-user me-1"></i> {{ current_user.name }}
-                            <span class="badge bg-secondary-subtle text-secondary ms-2" style="font-size: 0.65rem;">{{
-                                _('admin') if current_user.role == 'Admin' else (_('supervisor') if current_user.role == 'Supervisor' else _('worker')) }}</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                            <li><a class="dropdown-item text-danger" href="/logout"><i
-                                        class="fa-solid fa-right-from-bracket me-2"></i>{{ _('logout') }}</a></li>
-                        </ul>
-                    </li>
-                    {% else %}
-                    <li class="nav-item"><a class="nav-link btn-nav" href="/login">{{ _('login') }}</a></li>
-                    {% endif %}
+        <div class="d-flex align-items-center order-lg-3 gap-2">
+            {% if current_user and current_user.role == 'Worker' or request.path in ['/worker_login', '/verify_otp'] %}
+            <div class="dropdown">
+                <button class="btn btn-sm" style="background:var(--cream); border:1px solid var(--border); color:var(--text-muted); border-radius:9px; font-size:0.8rem; padding:6px 12px;" type="button" data-bs-toggle="dropdown">
+                    <i class="fa-solid fa-language me-1"></i>
+                    {{ 'हिन्दी' if session.get('lang') == 'hi' else 'EN' }}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="/set_language/en"><i class="fa-solid fa-check me-2 opacity-0" id="en-check"></i>English</a></li>
+                    <li><a class="dropdown-item" href="/set_language/hi"><i class="fa-solid fa-check me-2 opacity-0" id="hi-check"></i>हिन्दी</a></li>
                 </ul>
             </div>
+            {% endif %}
+
+            <div id="theme-toggle" title="Toggle theme">
+                <i class="fa-solid fa-moon fa-sm" id="theme-icon"></i>
+            </div>
+
+            <button class="navbar-toggler border-0 p-1" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="color:var(--earth-mid);">
+                <i class="fa-solid fa-bars"></i>
+            </button>
         </div>
-    </nav>
 
-    <div class="container page-animate" style="padding-top: 120px; padding-bottom: 50px;">
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center gap-1">
+                {% if current_user %}
+                <li class="nav-item"><a class="nav-link" id="nav-home" href="/">{{ _('dashboard') }}</a></li>
 
+                {% if current_user.role == 'Admin' %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fa-solid fa-plus fa-sm me-1"></i>{{ _('register') }}
+                    </a>
+                    <ul class="dropdown-menu border-0 shadow">
+                        <li><a class="dropdown-item" href="/add_worker"><i class="fa-solid fa-helmet-safety me-2" style="color:var(--amber);"></i>{{ _('worker') }}</a></li>
+                        <li><a class="dropdown-item" href="/add_supervisor"><i class="fa-solid fa-user-tie me-2" style="color:var(--saffron);"></i>{{ _('supervisor') }}</a></li>
+                    </ul>
+                </li>
+                {% elif current_user.role == 'Supervisor' %}
+                <li class="nav-item"><a class="nav-link" href="/add_worker"><i class="fa-solid fa-plus fa-sm me-1"></i>{{ _('add_worker') }}</a></li>
+                {% endif %}
+
+                {% if current_user.role in ['Admin', 'Supervisor'] %}
+                <li class="nav-item"><a class="nav-link" id="nav-record" href="/record_work">{{ _('record_work') }}</a></li>
+                {% endif %}
+
+                {% if current_user.role == 'Admin' %}
+                <li class="nav-item"><a class="nav-link" id="nav-approve" href="/admin/approve_logs">{{ _('approvals') }}</a></li>
+                <li class="nav-item"><a class="nav-link" id="nav-pay" href="/payments">{{ _('payments') }}</a></li>
+                {% endif %}
+
+                <li class="nav-item"><a class="nav-link" id="nav-history" href="/history">{{ _('history') }}</a></li>
+
+                <li class="nav-item ms-1">
+                    <div class="dropdown">
+                        <a class="nav-link d-flex align-items-center gap-2 fw-600" href="#" role="button" data-bs-toggle="dropdown"
+                           style="background:var(--saffron-light); color:var(--saffron-dark) !important; border-radius:10px; padding:6px 12px !important;">
+                            <div style="width:26px;height:26px;border-radius:50%;background:var(--saffron);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:white;">
+                                {{ current_user.name[0]|upper }}
+                            </div>
+                            <span style="font-size:0.85rem;font-weight:600;">{{ current_user.name.split()[0] }}</span>
+                            <span style="font-size:0.65rem;background:var(--saffron);color:white;padding:2px 7px;border-radius:100px;font-weight:700;">
+                                {{ 'Admin' if current_user.role == 'Admin' else ('Sup.' if current_user.role == 'Supervisor' else 'Worker') }}
+                            </span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item text-danger" href="/logout"><i class="fa-solid fa-right-from-bracket me-2"></i>{{ _('logout') }}</a></li>
+                        </ul>
+                    </div>
+                </li>
+                {% else %}
+                <li class="nav-item"><a class="nav-link nav-pill" href="/login">{{ _('login') }}</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- ─── FLASH MESSAGES ─── -->
+<div class="main-wrap">
+    <div class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
         <div class="row justify-content-center mb-4">
-            <div class="col-md-8 text-center">
+            <div class="col-md-8">
                 {% for category, message in messages %}
-                <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show shadow-sm"
-                    role="alert">
-                    <i
-                        class="fa-solid {{ 'fa-circle-check' if category == 'success' else 'fa-circle-exclamation' }} me-2"></i>
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show d-flex align-items-center gap-2" role="alert">
+                    <i class="fa-solid {{ 'fa-circle-check' if category == 'success' else 'fa-circle-exclamation' }}"></i>
+                    <span>{{ message }}</span>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
                 </div>
-
                 {% if category == 'success' %}
                 <script>
-                    window.addEventListener('load', () => {
-                        confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-                    });
+                    window.addEventListener('load', () => { confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 }, colors: ['#E8722A','#2D7A4F','#D4A017'] }); });
                 </script>
                 {% endif %}
                 {% endfor %}
@@ -364,71 +469,57 @@
         {% endif %}
         {% endwith %}
 
-        {% block content %}{% endblock %}
+        <div class="page-animate">
+            {% block content %}{% endblock %}
+        </div>
     </div>
+</div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<!-- ─── SCRIPTS ─── -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-    <script>
-        // 1. ACTIVE TAB LOGIC (Your Original Feature)
-        const path = window.location.pathname;
-        if (path === '/') {
-            document.getElementById('nav-home')?.classList.add('active-tab');
-        } else if (path.includes('record_work')) {
-            document.getElementById('nav-record')?.classList.add('active-tab');
-        } else if (path.includes('payments')) {
-            document.getElementById('nav-pay')?.classList.add('active-tab');
-        }
+<script>
+    // Active nav link
+    const path = window.location.pathname;
+    if (path === '/')                        document.getElementById('nav-home')?.classList.add('active-tab');
+    else if (path.includes('record_work'))   document.getElementById('nav-record')?.classList.add('active-tab');
+    else if (path.includes('approve'))       document.getElementById('nav-approve')?.classList.add('active-tab');
+    else if (path.includes('payments'))      document.getElementById('nav-pay')?.classList.add('active-tab');
+    else if (path.includes('history'))       document.getElementById('nav-history')?.classList.add('active-tab');
 
-        // 2. NEW: DARK MODE LOGIC
-        const themeToggle = document.getElementById('theme-toggle');
-        const themeIcon = document.getElementById('theme-icon');
-        const htmlElement = document.documentElement;
+    // Dark mode
+    const toggle = document.getElementById('theme-toggle');
+    const icon   = document.getElementById('theme-icon');
+    const html   = document.documentElement;
+    const saved  = localStorage.getItem('ss-theme') || 'light';
+    html.setAttribute('data-theme', saved);
+    updateIcon(saved);
 
-        // Check for saved preference
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        htmlElement.setAttribute('data-bs-theme', savedTheme);
-        updateIcon(savedTheme);
+    toggle.addEventListener('click', () => {
+        const cur = html.getAttribute('data-theme');
+        const nxt = cur === 'light' ? 'dark' : 'light';
+        html.setAttribute('data-theme', nxt);
+        localStorage.setItem('ss-theme', nxt);
+        updateIcon(nxt);
+    });
+    function updateIcon(t) {
+        icon.className = t === 'dark' ? 'fa-solid fa-sun fa-sm' : 'fa-solid fa-moon fa-sm';
+    }
 
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = htmlElement.getAttribute('data-bs-theme');
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-
-            htmlElement.setAttribute('data-bs-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateIcon(newTheme);
-        });
-
-        function updateIcon(theme) {
-            if (theme === 'dark') {
-                themeIcon.classList.replace('fa-moon', 'fa-sun');
-            } else {
-                themeIcon.classList.replace('fa-sun', 'fa-moon');
+    // Form submit loading
+    document.querySelectorAll('form').forEach(f => {
+        f.addEventListener('submit', function() {
+            const btn = this.querySelector('button[type="submit"]');
+            if (btn && !btn.disabled) {
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-2"></i>Processing...`;
             }
-        }
-
-        // 3. NEW: GLOBAL FORM LOADING FEEDBACK
-        document.querySelectorAll('form').forEach(form => {
-            form.addEventListener('submit', function () {
-                const submitBtn = this.querySelector('button[type="submit"]');
-                if (submitBtn) {
-                    submitBtn.classList.add('btn-loading');
-                    const originalText = submitBtn.innerHTML;
-                    submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin me-2"></i> Processing...`;
-                }
-            });
         });
-    </script>
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script>
-        AOS.init({
-            duration: 800, // Animation kitni der chalegi (ms)
-            once: true,    // Kya animation sirf ek baar honi chahiye
-        });
-    </script>
+    });
+</script>
+{% block extra_scripts %}{% endblock %}
 </body>
-
 </html>

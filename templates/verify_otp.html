@@ -1,23 +1,68 @@
 {% extends 'base.html' %}
+{% block title %}Verify OTP — ShramSetu{% endblock %}
+
+{% block extra_head %}
+<style>
+    .otp-wrap { min-height: calc(100vh - 200px); display: flex; align-items: center; justify-content: center; }
+    .otp-card {
+        width: 100%; max-width: 400px;
+        border-radius: 24px; border: 1px solid var(--border);
+        background: var(--card-bg); overflow: hidden;
+        box-shadow: var(--shadow-lg); text-align: center;
+    }
+    .otp-header {
+        padding: 2.5rem 2rem 2rem;
+        background: linear-gradient(135deg, var(--jade) 0%, #1d5535 100%);
+        position: relative; overflow: hidden;
+    }
+    .otp-header::before { content:''; position:absolute; right:-30px; top:-30px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,0.07); }
+    .otp-icon { width:64px; height:64px; border-radius:20px; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-size:1.8rem; color:white; margin:0 auto 1rem; }
+    .otp-header h2 { font-family:'Syne',sans-serif; font-weight:800; color:white; margin-bottom:0.3rem; font-size:1.5rem; }
+    .otp-header p { color:rgba(255,255,255,0.8); font-size:0.875rem; margin:0; }
+    .otp-body { padding: 2.5rem; }
+    .otp-input {
+        font-family: 'Syne', sans-serif;
+        font-size: 2.5rem; font-weight: 800;
+        text-align: center; letter-spacing: 18px;
+        border: 2px solid var(--border);
+        border-radius: 16px; padding: 1rem;
+        background: var(--input-bg); color: var(--text-primary);
+        width: 100%; outline: none; transition: all 0.2s;
+    }
+    .otp-input:focus { border-color: var(--jade); box-shadow: 0 0 0 4px rgba(45,122,79,0.12); }
+    .phone-chip {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: var(--jade-light); color: var(--jade);
+        padding: 4px 12px; border-radius: 100px; font-size: 0.82rem; font-weight: 700; margin: 0.5rem 0 1.5rem;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center page-animate">
-    <div class="col-md-5">
-        <div class="card p-4 shadow-lg border-0 border-top border-4 border-success">
-            <div class="text-center mb-4">
-                <h2 class="fw-bold text-dark">Enter OTP</h2>
-                <p class="text-muted small">We've sent a 4-digit code to <strong>+91 {{ session['temp_phone'] }}</strong></p>
+<div class="otp-wrap">
+    <div class="otp-card">
+        <div class="otp-header">
+            <div class="otp-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <h2>Enter OTP</h2>
+            <p>We sent a 4-digit code to your number</p>
+        </div>
+        <div class="otp-body">
+            <div class="phone-chip">
+                <i class="fa-solid fa-mobile-screen-button fa-sm"></i>+91 {{ session['temp_phone'] }}
             </div>
             <form method="POST" action="/verify_otp">
-                <div class="mb-4 text-center">
-                    <input type="text" name="otp" class="form-control form-control-lg text-center fw-bold letter-spacing-2" placeholder="• • • •" maxlength="4" style="font-size: 2rem; letter-spacing: 15px;" required autofocus>
+                <div class="mb-4">
+                    <input type="text" name="otp" class="otp-input"
+                           placeholder="••••" maxlength="4" required autofocus
+                           inputmode="numeric" pattern="[0-9]{4}">
+                    <div class="form-text text-center mt-2">Enter the 4-digit code</div>
                 </div>
-                <div class="d-grid mb-3">
-                    <button type="submit" class="btn btn-success btn-lg fw-bold shadow-sm"><i class="fa-solid fa-check-circle me-2"></i>Verify & Login</button>
-                </div>
-                <div class="text-center">
-                    <a href="/worker_login" class="text-decoration-none text-muted small">Change Phone Number</a>
-                </div>
+                <button type="submit" class="btn btn-success w-100 btn-lg mb-4">
+                    <i class="fa-solid fa-check-circle me-2"></i>Verify & Login
+                </button>
+                <a href="/worker_login" style="text-decoration:none; color:var(--text-muted); font-size:0.83rem;">
+                    <i class="fa-solid fa-rotate-left me-1"></i>Change Phone Number
+                </a>
             </form>
         </div>
     </div>
