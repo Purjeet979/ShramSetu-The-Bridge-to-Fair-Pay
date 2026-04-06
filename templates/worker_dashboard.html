@@ -1,96 +1,125 @@
 {% extends 'base.html' %}
+{% block title %}My Dashboard — ShramSetu{% endblock %}
+
+{% block extra_head %}
+<style>
+    .pay-banner {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;
+    }
+    .pay-card {
+        border-radius: 16px; padding: 1.75rem;
+        position: relative; overflow: hidden;
+    }
+    .pay-card.pending { background: linear-gradient(135deg, var(--saffron) 0%, #c45e1a 100%); }
+    .pay-card.paid    { background: linear-gradient(135deg, var(--jade) 0%, #1d5535 100%); }
+    .pay-card::before {
+        content:''; position:absolute; right:-20px; top:-20px;
+        width:110px; height:110px; border-radius:50%;
+        background: rgba(255,255,255,0.08);
+    }
+    .pay-card-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.75); margin-bottom: 0.4rem; }
+    .pay-card-value { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: white; }
+    @media (max-width: 576px) { .pay-banner { grid-template-columns: 1fr; } }
+
+    .work-table-wrap { border-radius: 16px; border: 1px solid var(--border); background: var(--card-bg); overflow: hidden; }
+    .work-table-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .work-table-header h5 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin: 0; }
+    .proof-thumb { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; border: 1.5px solid var(--border); }
+    .double-badge { display: flex; flex-direction: column; gap: 4px; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container page-animate">
-    <div class="row g-4 mb-5">
-        <div class="col-md-6">
-            <div class="card bg-primary text-white p-4 border-0 shadow">
-                <small class="opacity-75 text-uppercase fw-bold">{{ _('total_pending_wages') }}</small>
-                <h2 class="display-5 fw-bold">₹{{ "{:,.2f}".format(stats.total_pending) }}</h2>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card bg-success text-white p-4 border-0 shadow">
-                <small class="opacity-75 text-uppercase fw-bold">{{ _('total_paid_to_date') }}</small>
-                <h2 class="display-5 fw-bold">₹{{ "{:,.2f}".format(stats.total_paid) }}</h2>
-            </div>
-        </div>
-    </div>
-
-    <h3 class="fw-bold mb-4">{{ _('my_work_records') }}</h3>
-    <div class="card border-0 shadow-sm">
-        <div class="table-responsive">
-            <table class="table align-middle mb-0">
-                <thead class="bg-light">
-                    <tr class="small fw-bold text-muted">
-                        <th class="ps-4">{{ _('date') }}</th>
-                        <th>{{ _('type') }}</th>
-                        <th>{{ _('supervisor') }}</th>
-                        <th>{{ _('hours') }}</th>
-                        <th>{{ _('amount') }}</th>
-                        <th>{{ _('proof') }}</th>
-                        <th>{{ _('status') }}</th>
-                        <th class="pe-4">{{ _('notes') }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for entry in entries %}
-                    <tr>
-                        <td class="ps-4">
-                            <span class="d-block fw-bold">{{ entry.work_date }}</span>
-                            <span class="text-muted extra-small">Ref: #{{ entry.entry_id }}</span>
-                        </td>
-                        <td>
-                            <span class="badge bg-light text-dark border">{{ entry.work_type or 'General' }}</span>
-                        </td>
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="avatar-sm bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; font-size: 10px;">
-                                    {{ (entry.supervisor_name or 'S')[0] | upper }}
-                                </div>
-                                <span class="small">{{ entry.supervisor_name or 'System' }}</span>
-                            </div>
-                        </td>
-                        <td>{{ entry.hours_worked }}h</td>
-                        <td class="fw-bold text-primary">₹{{ "{:,.0f}".format(entry.wage_calculated) }}</td>
-                        <td>
-                            {% if entry.photo_path %}
-                                <a href="{{ url_for('static', filename=entry.photo_path) }}" target="_blank" class="text-decoration-none">
-                                    <img src="{{ url_for('static', filename=entry.photo_path) }}" class="rounded shadow-sm" style="width: 40px; height: 40px; object-fit: cover;" alt="Proof">
-                                </a>
-                            {% else %}
-                                <span class="text-muted small">No Photo</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="d-flex flex-column gap-1">
-                                {% if entry.approval_status == 'Approved' %}
-                                    <span class="badge bg-success-subtle text-success small">{{ _('approved') }}</span>
-                                {% elif entry.approval_status == 'Rejected' %}
-                                    <span class="badge bg-danger-subtle text-danger small">{{ _('rejected') }}</span>
-                                {% else %}
-                                    <span class="badge bg-warning-subtle text-warning small">{{ _('pending_review') }}</span>
-                                {% endif %}
-                                
-                                <span class="badge {{ 'bg-success' if entry.status == 'Paid' else 'bg-secondary bg-opacity-25 text-dark' }} x-small">
-                                    {{ _('paid') if entry.status == 'Paid' else _('pending_payment') }}
-                                </span>
-                            </div>
-                        </td>
-                        <td class="pe-4">
-                            {% if entry.admin_remark %}
-                                <div class="p-2 small bg-secondary bg-opacity-10 rounded border-start border-3 {{ 'border-danger' if entry.approval_status == 'Rejected' else 'border-primary' }}">
-    <strong>{{ _('admin') }}:</strong> <span class="text-body">{{ entry.admin_remark }}</span>
+<div class="page-header">
+    <h2>{{ _('my_work_records') }}</h2>
+    <p>{{ _('total_pending_wages') }} &amp; history for your account</p>
 </div>
+
+<!-- Pay banners -->
+<div class="pay-banner">
+    <div class="pay-card pending">
+        <div class="pay-card-label">{{ _('total_pending_wages') }}</div>
+        <div class="pay-card-value">₹{{ "{:,.0f}".format(stats.total_pending) }}</div>
+    </div>
+    <div class="pay-card paid">
+        <div class="pay-card-label">{{ _('total_paid_to_date') }}</div>
+        <div class="pay-card-value">₹{{ "{:,.0f}".format(stats.total_paid) }}</div>
+    </div>
+</div>
+
+<!-- Work records table -->
+<div class="work-table-wrap">
+    <div class="work-table-header">
+        <h5><i class="fa-solid fa-table-list me-2" style="color:var(--saffron);"></i>{{ _('my_work_records') }}</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th class="ps-4">{{ _('date') }}</th>
+                    <th>{{ _('type') }}</th>
+                    <th>{{ _('supervisor') }}</th>
+                    <th>{{ _('hours') }}</th>
+                    <th>{{ _('amount') }}</th>
+                    <th>{{ _('proof') }}</th>
+                    <th>{{ _('status') }}</th>
+                    <th class="pe-4">{{ _('notes') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                <tr>
+                    <td class="ps-4">
+                        <span class="d-block fw-bold" style="font-size:0.875rem;">{{ entry.work_date }}</span>
+                        <span style="font-size:0.72rem; color:var(--text-muted);">#{{ entry.entry_id }}</span>
+                    </td>
+                    <td><span class="badge" style="background:var(--saffron-light); color:var(--saffron-dark);">{{ entry.work_type or 'General' }}</span></td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div style="width:28px;height:28px;border-radius:50%;background:var(--sky-light);color:var(--sky);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;">
+                                {{ (entry.supervisor_name or 'S')[0]|upper }}
+                            </div>
+                            <span style="font-size:0.83rem;">{{ entry.supervisor_name or 'System' }}</span>
+                        </div>
+                    </td>
+                    <td><span style="font-weight:600;font-size:0.9rem;">{{ entry.hours_worked }}h</span></td>
+                    <td><span style="font-weight:700; color:var(--saffron); font-family:'Syne',sans-serif; font-size:0.95rem;">₹{{ "{:,.0f}".format(entry.wage_calculated) }}</span></td>
+                    <td>
+                        {% if entry.photo_path %}
+                            <a href="{{ url_for('static', filename=entry.photo_path) }}" target="_blank">
+                                <img src="{{ url_for('static', filename=entry.photo_path) }}" class="proof-thumb">
+                            </a>
+                        {% else %}
+                            <span style="font-size:0.78rem; color:var(--text-muted);">—</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="double-badge">
+                            {% if entry.approval_status == 'Approved' %}
+                                <span class="badge status-approved">{{ _('approved') }}</span>
+                            {% elif entry.approval_status == 'Rejected' %}
+                                <span class="badge status-rejected">{{ _('rejected') }}</span>
                             {% else %}
-                                <span class="text-muted small">{{ _('no_notes') }}</span>
+                                <span class="badge status-pending">{{ _('pending_review') }}</span>
                             {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                            <span class="badge {{ 'status-paid' if entry.status == 'Paid' else 'status-pending' }}">
+                                {{ _('paid') if entry.status == 'Paid' else _('pending_payment') }}
+                            </span>
+                        </div>
+                    </td>
+                    <td class="pe-4">
+                        {% if entry.admin_remark %}
+                            <div style="padding:8px 10px; background:var(--cream); border-radius:8px; border-left:3px solid {{ 'var(--jade)' if entry.approval_status == 'Approved' else 'var(--saffron)' }}; font-size:0.78rem; max-width:200px;">
+                                <span style="color:var(--text-muted); font-weight:700;">{{ _('admin') }}:</span> {{ entry.admin_remark }}
+                            </div>
+                        {% else %}
+                            <span style="color:var(--text-muted); font-size:0.8rem;">{{ _('no_notes') }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}

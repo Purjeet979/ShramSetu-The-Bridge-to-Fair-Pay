@@ -1,283 +1,220 @@
 {% extends 'base.html' %}
+{% block title %}Dashboard — ShramSetu{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .hero-banner {
+        background: linear-gradient(135deg, var(--saffron) 0%, #d4520f 100%);
+        border-radius: 20px;
+        padding: 2.5rem 3rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+    .hero-banner::before {
+        content: '';
+        position: absolute; inset: 0;
+        background: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3e%3ccircle cx='80' cy='20' r='60' fill='rgba(255,255,255,0.06)'/%3e%3ccircle cx='20' cy='80' r='40' fill='rgba(255,255,255,0.04)'/%3e%3c/svg%3e");
+        background-size: cover;
+    }
+    .hero-banner > * { position: relative; z-index: 1; }
+    .hero-title { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 800; margin-bottom: 0.5rem; line-height: 1.1; }
+    .hero-sub { opacity: 0.85; font-size: 0.95rem; margin-bottom: 1.5rem; max-width: 480px; }
+    .hero-cta {
+        background: white; color: var(--saffron);
+        border: none; padding: 10px 24px; border-radius: 50px;
+        font-weight: 700; font-size: 0.9rem; cursor: pointer;
+        text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+        transition: all 0.2s; box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    }
+    .hero-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); color: var(--saffron-dark); }
+    .hero-shield { position: absolute; right: 2rem; top: 50%; transform: translateY(-50%); font-size: 9rem; opacity: 0.08; pointer-events: none; }
+
+    .chart-card { border-radius: 16px; border: 1px solid var(--border); background: var(--card-bg); padding: 1.5rem; }
+    .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem; }
+    .chart-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin: 0; }
+    .chart-toggle .btn { font-size: 0.78rem; padding: 5px 14px; border-radius: 8px; }
+    .chart-toggle .btn.active { background: var(--saffron); border-color: var(--saffron); color: white; }
+    .chart-toggle .btn:not(.active) { background: var(--cream); border-color: var(--border); color: var(--text-muted); }
+    [data-theme="dark"] .chart-toggle .btn:not(.active) { background: var(--input-bg); }
+
+    .feature-card-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 2rem; }
+    .feat-card {
+        border-radius: 16px; padding: 1.75rem;
+        border: 1px solid var(--border); background: var(--card-bg);
+        transition: all 0.3s; cursor: pointer; text-decoration: none; color: inherit; display: block;
+    }
+    .feat-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); color: inherit; }
+    .feat-card-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin-bottom: 1.1rem; }
+    .feat-card-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 0.4rem; }
+    .feat-card-desc { font-size: 0.83rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.25rem; }
+    .feat-card-cta { font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 5px; }
+</style>
+{% endblock %}
 
 {% block content %}
-<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-    .hero-section {
-        background: linear-gradient(135deg, rgba(37, 99, 235, 0.85) 0%, rgba(79, 70, 229, 0.85) 100%);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        color: white;
-        border-radius: 20px;
-        padding: 60px 40px;
-        box-shadow: 0 20px 40px rgba(37, 99, 235, 0.2);
-        margin-bottom: 40px;
-        border: 1px solid rgba(255,255,255,0.2);
-    }
-
-    .feature-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    }
-
-    .icon-box {
-        width: 60px;
-        height: 60px;
-        border-radius: 15px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        margin-bottom: 20px;
-    }
-
-    .stat-card {
-        border-radius: 16px;
-        transition: transform 0.3s ease;
-    }
-
-    .stat-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-</style>
-
-<div class="hero-section text-center text-md-start d-flex align-items-center justify-content-between position-relative overflow-hidden"
-    data-aos="fade-down">
-    <div class="position-relative z-1">
-        <h1 class="display-4 fw-bold mb-3">Fair Pay for Every Hour.</h1>
-        <p class="lead opacity-75 mb-4">A non-deniable, digital verification system to ensure daily wage workers get the
-            money they deserve.</p>
-        <a href="/record_work" class="btn btn-light text-primary fw-bold px-4 py-3 rounded-pill">
-            <i class="fa-solid fa-clock me-2"></i>Start Recording
-        </a>
-    </div>
-    <i class="fa-solid fa-shield-halved position-absolute opacity-25"
-        style="font-size: 15rem; right: -20px; top: 10px; color: rgba(255,255,255,0.1);"></i>
+<!-- Hero Banner -->
+<div class="hero-banner">
+    <div class="hero-title">Fair Pay for Every Hour.</div>
+    <p class="hero-sub">A non-deniable, digital verification system ensuring daily wage workers get exactly what they earn.</p>
+    <a href="/record_work" class="hero-cta">
+        <i class="fa-solid fa-clock"></i> Start Recording
+    </a>
+    <i class="fa-solid fa-shield-halved hero-shield"></i>
 </div>
 
+<!-- Stat Cards -->
 <div class="row g-3 mb-4">
-    <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
-        <div class="card p-3 border-0 border-start border-primary border-4 shadow-sm" style="border-radius: 16px;">
-            <div class="d-flex align-items-center">
-                <div class="stat-icon bg-primary bg-opacity-10 text-primary me-3">
-                    <i class="fa-solid fa-users fa-lg"></i>
-                </div>
-                <div>
-                    <p class="text-muted small fw-bold mb-0">TOTAL WORKERS</p>
-                    <h3 class="fw-bold mb-0">{{ stats.total_workers }}</h3>
-                </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:var(--saffron-light); color:var(--saffron);">
+                <i class="fa-solid fa-users"></i>
             </div>
+            <div class="stat-label">Total Workers</div>
+            <div class="stat-value">{{ stats.total_workers }}</div>
         </div>
     </div>
 
     {% if session['user_role'] == 'Admin' %}
-    <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
-        <div class="card p-3 border-0 border-start border-success border-4 shadow-sm" style="border-radius: 16px;">
-            <div class="d-flex align-items-center">
-                <div class="stat-icon bg-success bg-opacity-10 text-success me-3">
-                    <i class="fa-solid fa-indian-rupee-sign fa-lg"></i>
-                </div>
-                <div>
-                    <p class="text-muted small fw-bold mb-0">PENDING WAGES</p>
-                    <h3 class="fw-bold mb-0 text-success">₹{{ "{:,.2f}".format(stats.pending_wages) }}</h3>
-                </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:var(--jade-light); color:var(--jade);">
+                <i class="fa-solid fa-indian-rupee-sign"></i>
             </div>
+            <div class="stat-label">Pending Wages</div>
+            <div class="stat-value" style="color:var(--jade);">₹{{ "{:,.0f}".format(stats.pending_wages) }}</div>
         </div>
     </div>
     {% endif %}
 
-    <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
-        <div class="card p-3 border-0 border-start border-warning border-4 shadow-sm" style="border-radius: 16px;">
-            <div class="d-flex align-items-center">
-                <div class="stat-icon bg-warning bg-opacity-10 text-warning me-3">
-                    <i class="fa-solid fa-bolt fa-lg"></i>
-                </div>
-                <div>
-                    <p class="text-muted small fw-bold mb-0">HOURS LOGGED TODAY</p>
-                    <h3 class="fw-bold mb-0 text-warning">{{ stats.hours_today }}h</h3>
-                </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:var(--amber-light); color:var(--amber);">
+                <i class="fa-solid fa-bolt"></i>
             </div>
+            <div class="stat-label">Hours Logged Today</div>
+            <div class="stat-value" style="color:var(--amber);">{{ stats.hours_today }}h</div>
         </div>
     </div>
 </div>
 
-<div class="card shadow-sm mb-5 border-0" data-aos="fade-in">
-    <div class="card-body p-4">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
-            <h5 class="fw-bold mb-3 mb-md-0">
-                <i class="fa-solid fa-chart-pie me-2 text-primary"></i>Analytics Overview
-            </h5>
-
-            <div class="btn-group btn-group-sm shadow-sm" role="group">
-                <button type="button" class="btn btn-outline-primary active" id="showLineChart">Activity Trend</button>
-                <button type="button" class="btn btn-outline-primary" id="showPieChart">Wage Distribution</button>
-            </div>
-        </div>
-
-        <div id="lineChartContainer" style="height: 300px;">
-            <canvas id="laborChart"></canvas>
-        </div>
-        <div id="pieChartContainer" style="height: 300px; display: none;">
-            <canvas id="compositionChart"></canvas>
+<!-- Chart -->
+<div class="chart-card mb-4">
+    <div class="chart-header">
+        <div class="chart-title"><i class="fa-solid fa-chart-column me-2" style="color:var(--saffron);"></i>Analytics Overview</div>
+        <div class="chart-toggle btn-group btn-group-sm">
+            <button class="btn active" id="showLine">Activity Trend</button>
+            <button class="btn" id="showPie">Wage Distribution</button>
         </div>
     </div>
+    <div id="lineWrap" style="height:280px;"><canvas id="laborChart"></canvas></div>
+    <div id="pieWrap"  style="height:280px; display:none;"><canvas id="compositionChart"></canvas></div>
 </div>
 
-<div class="row align-items-stretch">
+<!-- Feature Cards -->
+<div class="feature-card-row">
+    {% if session['user_role'] == 'Admin' %}
+    <a href="/add_worker" class="feat-card">
+        <div class="feat-card-icon" style="background:var(--saffron-light); color:var(--saffron);">
+            <i class="fa-solid fa-user-plus"></i>
+        </div>
+        <div class="feat-card-title">Register Worker</div>
+        <p class="feat-card-desc">Onboard new skilled or unskilled labourers securely into the system.</p>
+        <div class="feat-card-cta" style="color:var(--saffron);">Add New <i class="fa-solid fa-arrow-right fa-xs"></i></div>
+    </a>
+    {% endif %}
+
+    <a href="/record_work" class="feat-card">
+        <div class="feat-card-icon" style="background:var(--amber-light); color:var(--amber);">
+            <i class="fa-solid fa-stopwatch"></i>
+        </div>
+        <div class="feat-card-title">Daily Log</div>
+        <p class="feat-card-desc">Track hours and auto-calculate 1.5× or 2.0× overtime wages instantly.</p>
+        <div class="feat-card-cta" style="color:var(--amber);">Log Hours <i class="fa-solid fa-arrow-right fa-xs"></i></div>
+    </a>
 
     {% if session['user_role'] == 'Admin' %}
-    <div class="col-md-4 mb-4" data-aos="zoom-in" data-aos-delay="100">
-        <div class="card h-100 feature-card p-4 border-primary border-top border-4">
-            <div class="card-body">
-                <div class="icon-box bg-primary bg-opacity-10 text-primary">
-                    <i class="fa-solid fa-user-plus"></i>
-                </div>
-                <h4 class="card-title fw-bold">Register Worker</h4>
-                <p class="text-muted">Onboard new skilled or unskilled laborers to the database securely.</p>
-                <a href="/add_worker" class="btn btn-outline-primary w-100 mt-2">Add New</a>
-            </div>
+    <a href="/admin/approve_logs" class="feat-card">
+        <div class="feat-card-icon" style="background:var(--sky-light); color:var(--sky);">
+            <i class="fa-solid fa-user-check"></i>
         </div>
-    </div>
-    {% endif %}
+        <div class="feat-card-title">Approvals</div>
+        <p class="feat-card-desc">Review and approve overtime log submissions from supervisors.</p>
+        <div class="feat-card-cta" style="color:var(--sky);">Review <i class="fa-solid fa-arrow-right fa-xs"></i></div>
+    </a>
 
-    <div class="col-md-4 mb-4" data-aos="zoom-in" data-aos-delay="200">
-        <div class="card h-100 feature-card p-4 border-warning border-top border-4">
-            <div class="card-body">
-                <div class="icon-box bg-warning bg-opacity-10 text-warning">
-                    <i class="fa-solid fa-stopwatch"></i>
-                </div>
-                <h4 class="card-title fw-bold">Daily Log</h4>
-                <p class="text-muted">Track hours. Our system auto-calculates 1.5x or 2.0x overtime wages.</p>
-                <a href="/record_work" class="btn btn-outline-warning w-100 mt-2">Log Hours</a>
-            </div>
+    <a href="/payments" class="feat-card">
+        <div class="feat-card-icon" style="background:var(--jade-light); color:var(--jade);">
+            <i class="fa-solid fa-indian-rupee-sign"></i>
         </div>
-    </div>
-
-    {% if session['user_role'] == 'Admin' %}
-    <div class="col-md-4 mb-4" data-aos="zoom-in" data-aos-delay="300">
-        <div class="card h-100 feature-card p-4 border-success border-top border-4">
-            <div class="card-body">
-                <div class="icon-box bg-success bg-opacity-10 text-success">
-                    <i class="fa-solid fa-indian-rupee-sign"></i>
-                </div>
-                <h4 class="card-title fw-bold">Payments</h4>
-                <p class="text-muted">View pending dues and generate digital proof of payment receipts.</p>
-                <a href="/payments" class="btn btn-outline-success w-100 mt-2">View Pending</a>
-            </div>
-        </div>
-    </div>
+        <div class="feat-card-title">Payments</div>
+        <p class="feat-card-desc">View pending dues and generate digital proof of payment receipts.</p>
+        <div class="feat-card-cta" style="color:var(--jade);">View Pending <i class="fa-solid fa-arrow-right fa-xs"></i></div>
+    </a>
     {% endif %}
 </div>
 
-<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+{% endblock %}
+
+{% block extra_scripts %}
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Initialize AOS
-        AOS.init({
-            duration: 800,
-            easing: 'ease-in-out',
-            once: true,
-            offset: 100
-        });
+document.addEventListener('DOMContentLoaded', function () {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const gridColor = isDark ? 'rgba(255,200,150,0.07)' : 'rgba(44,26,14,0.06)';
+    const textColor = isDark ? '#c4956a' : '#8a6040';
 
-        // --- Updated Monthly Activity Bar Chart ---
-        const ctxBar = document.getElementById('laborChart').getContext('2d');
-        const barGradient = ctxBar.createLinearGradient(0, 0, 0, 400);
-        barGradient.addColorStop(0, '#2563eb');
-        barGradient.addColorStop(1, 'rgba(37, 99, 235, 0.1)');
+    const ctxBar = document.getElementById('laborChart').getContext('2d');
+    const grad = ctxBar.createLinearGradient(0, 0, 0, 300);
+    grad.addColorStop(0, 'rgba(232,114,42,0.85)');
+    grad.addColorStop(1, 'rgba(232,114,42,0.08)');
 
-        const barChart = new Chart(ctxBar, {
-            type: 'bar',
-            data: {
-                labels: {{ chart_data.labels | tojson }},
-        datasets: [{
-            label: 'Total Hours Worked',
-            data: {{ chart_data.data_points | tojson }},
-        backgroundColor: barGradient,
-        borderRadius: 5,
-        }]
-    },
-        options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            x: {
-                grid: { display: false },
-                ticks: {
-                    autoSkip: true, // Zyadatar labels ko skip karega taaki clutter na ho
-                    maxRotation: 0,
-                    minRotation: 0
-                }
-            },
-            y: {
-                beginAtZero: true,
-                ticks: { callback: value => value + 'h' }
-            }
+    const barChart = new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+            labels: {{ chart_data.labels | tojson }},
+            datasets: [{ label: 'Hours Worked', data: {{ chart_data.data_points | tojson }}, backgroundColor: grad, borderRadius: 6, borderSkipped: false }]
         },
-        plugins: {
-            legend: { display: false },
-            tooltip: {
-                callbacks: {
-                    label: (context) => ` Total: ${context.raw}h`
-                }
-            }
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                x: { grid: { display: false }, ticks: { color: textColor, maxRotation: 0, font: { size: 11 } } },
+                y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: textColor, callback: v => v + 'h' } }
+            },
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.raw}h worked` }, backgroundColor: '#2C1A0E', titleColor: '#fde8d8', bodyColor: '#fde8d8', cornerRadius: 10, padding: 10 } }
         }
-    }
-});
+    });
 
-    // --- 2. Wage Distribution (Doughnut Chart) ---
     const ctxPie = document.getElementById('compositionChart').getContext('2d');
     const pieChart = new Chart(ctxPie, {
         type: 'doughnut',
         data: {
             labels: {{ comp_data.labels | tojson }},
-    datasets: [{
-        data: {{ comp_data.counts | tojson }},
-        backgroundColor: ['#2563eb', '#64748b'],
-        borderWidth: 2,
-        borderColor: '#ffffff',
-        hoverOffset: 15
-                }]
-            },
-    options: {
-        responsive: true,
-            maintainAspectRatio: false,
-                plugins: {
-            legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } },
-            tooltip: { callbacks: { label: (item) => ` ₹${item.raw.toLocaleString()}` } }
+            datasets: [{ data: {{ comp_data.counts | tojson }}, backgroundColor: ['#E8722A','#2D7A4F','#1A6B9A','#D4A017'], borderWidth: 3, borderColor: isDark ? '#1e1409' : '#fff', hoverOffset: 10 }]
         },
-        cutout: '70%'
-    }
-        });
-
-    // --- 3. Switcher Logic ---
-    const lineBtn = document.getElementById('showLineChart');
-    const pieBtn = document.getElementById('showPieChart');
-    const lineCont = document.getElementById('lineChartContainer');
-    const pieCont = document.getElementById('pieChartContainer');
-
-    lineBtn.addEventListener('click', () => {
-        lineCont.style.display = 'block';
-        pieCont.style.display = 'none';
-        lineBtn.classList.add('active');
-        pieBtn.classList.remove('active');
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, color: textColor, font: { size: 12 } } },
+                tooltip: { callbacks: { label: i => ` ₹${i.raw.toLocaleString()}` }, backgroundColor: '#2C1A0E', cornerRadius: 10, padding: 10 }
+            },
+            cutout: '68%'
+        }
     });
 
-    pieBtn.addEventListener('click', () => {
-        lineCont.style.display = 'none';
-        pieCont.style.display = 'block';
-        pieBtn.classList.add('active');
-        lineBtn.classList.remove('active');
-        pieChart.update(); // Refresh layout
+    document.getElementById('showLine').addEventListener('click', function() {
+        document.getElementById('lineWrap').style.display = 'block';
+        document.getElementById('pieWrap').style.display = 'none';
+        this.classList.add('active'); document.getElementById('showPie').classList.remove('active');
     });
+    document.getElementById('showPie').addEventListener('click', function() {
+        document.getElementById('lineWrap').style.display = 'none';
+        document.getElementById('pieWrap').style.display = 'block';
+        this.classList.add('active'); document.getElementById('showLine').classList.remove('active');
+        pieChart.update();
     });
+});
 </script>
 {% endblock %}

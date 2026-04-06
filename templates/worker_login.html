@@ -1,29 +1,55 @@
 {% extends 'base.html' %}
+{% block title %}Worker Login — ShramSetu{% endblock %}
+
+{% block extra_head %}
+<style>
+    .worker-login-wrap { min-height: calc(100vh - 200px); display: flex; align-items: center; justify-content: center; }
+    .worker-login-card {
+        width: 100%; max-width: 420px;
+        border-radius: 24px; border: 1px solid var(--border);
+        background: var(--card-bg); overflow: hidden;
+        box-shadow: var(--shadow-lg);
+    }
+    .wl-header {
+        padding: 2.5rem 2.5rem 2rem;
+        background: linear-gradient(135deg, var(--amber) 0%, #9a6a00 100%);
+        text-align: center; position: relative; overflow: hidden;
+    }
+    .wl-header::before { content:''; position:absolute; right:-40px; bottom:-40px; width:150px; height:150px; border-radius:50%; background:rgba(255,255,255,0.07); }
+    .wl-icon { width: 64px; height: 64px; border-radius: 20px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: white; margin: 0 auto 1rem; }
+    .wl-header h2 { font-family:'Syne',sans-serif; font-weight:800; color:white; margin-bottom:0.3rem; font-size:1.5rem; }
+    .wl-header p { color:rgba(255,255,255,0.8); font-size:0.875rem; margin:0; }
+    .wl-body { padding: 2.5rem; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center page-animate">
-    <div class="col-md-5">
-        <div class="card p-4 shadow-lg border-0 border-top border-4 border-warning">
-            <div class="text-center mb-4">
-                <div class="d-inline-flex align-items-center justify-content-center bg-warning text-white rounded-circle mb-3" style="width: 60px; height: 60px;">
-                    <i class="fa-solid fa-mobile-screen-button fs-3"></i>
-                </div>
-                <h2 class="fw-bold text-dark">Worker Login</h2>
-                <p class="text-muted small">Enter your registered mobile number</p>
-            </div>
+<div class="worker-login-wrap">
+    <div class="worker-login-card">
+        <div class="wl-header">
+            <div class="wl-icon"><i class="fa-solid fa-mobile-screen-button"></i></div>
+            <h2>Worker Login</h2>
+            <p>Enter your registered mobile number to receive OTP</p>
+        </div>
+        <div class="wl-body">
             <form method="POST" action="/worker_login">
                 <div class="mb-4">
-                    <label class="form-label small fw-bold text-muted">Mobile Number</label>
+                    <label class="form-label">Mobile Number</label>
                     <div class="input-group input-group-lg">
-                        <span class="input-group-text bg-light border-end-0">+91</span>
-                        <input type="text" name="phone" class="form-control border-start-0" placeholder="9876543210" pattern="[0-9]{10}" required>
+                        <span class="input-group-text" style="border-radius:10px 0 0 10px;">+91</span>
+                        <input type="text" name="phone" class="form-control" placeholder="9876543210"
+                               pattern="[0-9]{10}" maxlength="10" required
+                               style="border-radius:0 10px 10px 0; letter-spacing:2px; font-weight:600; font-size:1.1rem;">
                     </div>
+                    <div class="form-text">We'll send a 4-digit OTP to this number</div>
                 </div>
-                <div class="d-grid mb-3">
-                    <button type="submit" class="btn btn-warning btn-lg text-white fw-bold shadow-sm">Send OTP</button>
-                </div>
+                <button type="submit" class="btn btn-warning w-100 btn-lg text-white mb-4">
+                    <i class="fa-solid fa-paper-plane me-2"></i>Send OTP
+                </button>
                 <div class="text-center">
-                    <a href="/login" class="text-decoration-none text-muted small"><i class="fa-solid fa-arrow-left me-1"></i> Admin/Supervisor Login</a>
+                    <a href="/login" style="text-decoration:none; color:var(--text-muted); font-size:0.83rem;">
+                        <i class="fa-solid fa-arrow-left me-1"></i>Admin / Supervisor Login
+                    </a>
                 </div>
             </form>
         </div>
