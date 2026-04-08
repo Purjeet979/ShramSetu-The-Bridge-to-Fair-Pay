@@ -4,7 +4,8 @@
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-1.0%2B-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-DB-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
 ---
@@ -50,7 +51,7 @@
 | :--- | :--- |
 | **Backend** | Python (Flask), JWT, OAuth2 |
 | **Frontend** | HTML5, CSS3 (Glassmorphism), Bootstrap 5, Jinja2 |
-| **Database** | MySQL |
+| **Database** | PostgreSQL (Supabase) |
 | **Utilities** | Pandas (Reports), Fast2SMS (OTP), Canvas-Confetti (UX) |
 
 ---
@@ -81,12 +82,14 @@ cd ShramSetu-The-Bridge-to-Fair-Pay
 ### 2. Environment Configuration
 Create a `.env` file in the root directory and add the following:
 ```env
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_password
-DB_NAME=daily_wage_db
+# Database (PostgreSQL/Supabase)
+DATABASE_URL=your_postgresql_connection_string
+
+# App Secrets
 APP_SECRET_KEY=your_secret_key
 JWT_SECRET_KEY=your_jwt_key
+
+# Integrations
 GOOGLE_CLIENT_ID=your_google_id
 GOOGLE_CLIENT_SECRET=your_google_secret
 FAST2SMS_API_KEY=your_sms_key
@@ -96,7 +99,7 @@ FAST2SMS_API_KEY=your_sms_key
 ```bash
 pip install -r requirements.txt
 ```
-*(Note: Ensure you have `flask`, `flask-jwt-extended`, `authlib`, `mysql-connector-python`, `requests`, and `pandas` installed.)*
+*(Note: Ensure you have `flask`, `flask-jwt-extended`, `authlib`, `psycopg2-binary`, `requests`, and `pandas` installed.)*
 
 ### 4. Initialize Database
 ```bash
