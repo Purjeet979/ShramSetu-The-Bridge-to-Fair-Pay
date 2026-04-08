@@ -108,15 +108,25 @@
                         </div>
                     </td>
                     <td class="pe-4">
-                        {% if entry.admin_remark %}
+                        {% if entry.is_disputed %}
+                            <span class="badge" style="background:#fde8e8; color:#c0392b; font-size:0.75rem;"><i class="fa-solid fa-triangle-exclamation me-1"></i>Disputed</span>
+                        {% elif entry.admin_remark %}
                             <div style="padding:8px 10px; background:var(--cream); border-radius:8px; border-left:3px solid {{ 'var(--jade)' if entry.approval_status == 'Approved' else 'var(--saffron)' }}; font-size:0.78rem; max-width:200px;">
                                 <span style="color:var(--text-muted); font-weight:700;">{{ _('admin') }}:</span> {{ entry.admin_remark }}
                             </div>
                         {% else %}
                             <span style="color:var(--text-muted); font-size:0.8rem;">{{ _('no_notes') }}</span>
+                            {% if entry.status == 'Pending' %}
+                            <form action="/dispute/{{ entry.entry_id }}" method="POST" class="d-inline ms-2">
+                                <button type="submit" class="btn btn-sm" style="background:none; border:1px solid #f5c6c6; color:#c0392b; font-size:0.7rem; padding:3px 8px;" onclick="return confirm('Are you sure you want to dispute this work entry? Admin will be notified.');">
+                                    <i class="fa-solid fa-flag"></i> Report
+                                </button>
+                            </form>
+                            {% endif %}
                         {% endif %}
                     </td>
                 </tr>
+
                 {% endfor %}
             </tbody>
         </table>

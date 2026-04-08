@@ -47,7 +47,12 @@
                         <div class="worker-cell">
                             <div class="worker-avatar-sm">{{ log.worker_name[0]|upper }}</div>
                             <div>
-                                <div style="font-weight:600; font-size:0.875rem;">{{ log.worker_name }}</div>
+                                <div style="font-weight:600; font-size:0.875rem;">
+                                    {{ log.worker_name }}
+                                    {% if log.is_disputed %}
+                                        <span class="badge ms-1" style="background:#fde8e8; color:#c0392b; font-size:0.65rem;"><i class="fa-solid fa-flag me-1"></i>DISPUTED</span>
+                                    {% endif %}
+                                </div>
                                 <div style="font-size:0.72rem; color:var(--text-muted);">{{ log.worker_type }}</div>
                             </div>
                         </div>
