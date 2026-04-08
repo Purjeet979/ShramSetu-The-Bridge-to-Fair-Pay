@@ -1,11 +1,32 @@
 import database
-import mysql.connector
+import psycopg2
+from psycopg2 import extras
 import os
 import requests
 import random
 import pandas as pd
+import math
 from database import get_connection
 from datetime import datetime, timedelta
+
+def calculate_distance(lat1, lon1, lat2, lon2):
+    """
+    Calculates the distance between two GPS coordinates using the Haversine formula.
+    Returns distance in meters.
+    """
+    R = 6371000  # Radius of the Earth in meters
+    phi_1 = math.radians(lat1)
+    phi_2 = math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
+
+    a = math.sin(delta_phi / 2.0) ** 2 + \
+        math.cos(phi_1) * math.cos(phi_2) * \
+        math.sin(delta_lambda / 2.0) ** 2
+    
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return R * c
+
 
 class User:
     def __init__(self, name, identifier, role):
@@ -26,7 +47,8 @@ class Admin(User):
             sql = "UPDATE work_entries SET approval_status = %s, admin_remark = %s WHERE entry_id = %s"
             cursor.execute(sql, (status, remark, entry_id))
             conn.commit()
-            conn.close()
+            cursor.close()
+            database.release_connection(conn)
             return True
         return False
 
@@ -53,7 +75,8 @@ class Worker:
             val = (self.name, self.worker_type, self._hourly_rate, phone)
             cursor.execute(sql, val)
             conn.commit()
-            conn.close()
+            cursor.close()
+            database.release_connection(conn)
             print(f"Worker {self.name} saved successfully.")
 
 # --- CHILD CLASSES (OOP) ---
@@ -82,7 +105,7 @@ def add_work_entry(worker_id, hours_worked, supervisor_id, work_date=None, work_
     conn = database.get_connection()
     if not conn: return False
 
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cursor.execute("SELECT * FROM workers WHERE worker_id = %s", (worker_id,))
     data = cursor.fetchone()
 
@@ -109,7 +132,8 @@ def add_work_entry(worker_id, hours_worked, supervisor_id, work_date=None, work_
         """
         cursor.execute(sql, (worker_id, supervisor_id, work_date, hours_worked, wage, work_type, gps_location, photo_path, approval_status))
         conn.commit()
-        conn.close()
+        cursor.close()
+        database.release_connection(conn)
         return True
     return False
 
@@ -117,7 +141,7 @@ def get_all_approved_wages():
     conn = database.get_connection()
     result = []
     if conn:
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         sql = """
                     SELECT w.name, e.entry_id, e.work_date, e.wage_calculated, w.worker_type, e.status
                     FROM work_entries e 
@@ -126,8 +150,9 @@ def get_all_approved_wages():
                     ORDER BY e.work_date DESC
                 """
         cursor.execute(sql)
-        result = cursor.fetchall()
-        conn.close()
+        result = [dict(row) for row in cursor.fetchall()]
+        cursor.close()
+        database.release_connection(conn)
     return result
 
 def get_dashboard_stats():
@@ -142,9 +167,10 @@ def get_dashboard_stats():
         cursor.execute("SELECT SUM(wage_calculated) FROM work_entries WHERE status = 'Pending'")
         stats["pending_wages"] = cursor.fetchone()[0] or 0
         # Hours Logged Today
-        cursor.execute("SELECT SUM(hours_worked) FROM work_entries WHERE work_date = CURDATE()")
+        cursor.execute("SELECT SUM(hours_worked) FROM work_entries WHERE work_date = CURRENT_DATE")
         stats["hours_today"] = cursor.fetchone()[0] or 0
-        conn.close()
+        cursor.close()
+        database.release_connection(conn)
     return stats
 
 def get_chart_data():
@@ -156,14 +182,15 @@ def get_chart_data():
         cursor.execute("""
             SELECT work_date, SUM(hours_worked) 
             FROM work_entries 
-            WHERE work_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+            WHERE work_date >= CURRENT_DATE - INTERVAL '30 days'
             GROUP BY work_date ORDER BY work_date ASC
         """)
         rows = cursor.fetchall()
         for row in rows:
             data["labels"].append(row[0].strftime("%b %d"))
             data["data_points"].append(float(row[1]))
-        conn.close()
+        cursor.close()
+        database.release_connection(conn)
     return data
 
 def get_composition_data():
@@ -184,7 +211,8 @@ def get_composition_data():
                 data["counts"][0] = float(row[1])
             elif row[0] == "Unskilled":
                 data["counts"][1] = float(row[1])
-        conn.close()
+        cursor.close()
+        database.release_connection(conn)
     return data
 
 
@@ -220,7 +248,7 @@ def get_worker_stats(identifier):
             cursor.close()
 
             # 2. Fetch Recent Entries
-            cursor = conn.cursor(dictionary=True)
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             cursor.execute("""
                 SELECT e.*, u.name as supervisor_name 
                 FROM work_entries e 
@@ -228,9 +256,10 @@ def get_worker_stats(identifier):
                 WHERE e.worker_id = %s 
                 ORDER BY e.work_date DESC LIMIT 10
             """, (worker_id,))
-            entries = cursor.fetchall()
+            entries = [dict(row) for row in cursor.fetchall()]
+            cursor.close()
 
-        conn.close()
+        database.release_connection(conn)
 
     return stats, entries
 
@@ -244,13 +273,14 @@ def add_supervisor_to_db(name, username, password):
             cursor.execute(sql, (name, username, password))
             conn.commit()
             return True, "Supervisor added successfully."
-        except mysql.connector.IntegrityError:
+        except psycopg2.IntegrityError:
             # Agar username pehle se exist karta hai
             return False, "This Username/Email is already taken!"
         except Exception as e:
             return False, str(e)
         finally:
-            conn.close()
+            cursor.close()
+            database.release_connection(conn)
     return False, "Database connection failed."
 
 
@@ -344,7 +374,8 @@ def export_payments_to_excel():
     file_name = "payments_report.xlsx"
     df.to_excel(file_name, index=False)
 
-    conn.close()
+    cursor.close()
+    database.release_connection(conn)
 
     return file_name
 
@@ -361,14 +392,14 @@ def make_payment(entry_id, payment_mode):
     if not conn:
         return False
 
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     # Step 1: Fetch entry
     cursor.execute("SELECT * FROM work_entries WHERE entry_id = %s", (entry_id,))
     entry = cursor.fetchone()
 
     if not entry:
-        conn.close()
+        database.release_connection(conn)
         return False
 
     # Step 2: Apply penalty if needed
@@ -391,6 +422,7 @@ def make_payment(entry_id, payment_mode):
     """, (entry_id,))
 
     conn.commit()
-    conn.close()
+    cursor.close()
+    database.release_connection(conn)
 
     return True
