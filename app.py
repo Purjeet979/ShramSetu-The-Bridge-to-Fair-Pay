@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file, session, jsonify, make_response, send_from_directory
 import database
 import logic
+import psycopg2
+from psycopg2 import extras
 import random
 import os
 from translations import TRANSLATIONS
@@ -113,10 +115,10 @@ def login():
 
         conn = database.get_connection()
         if conn:
-            cursor = conn.cursor(dictionary=True)
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             cursor.execute("SELECT * FROM users WHERE identifier = %s", (identifier,))
             user = cursor.fetchone()
-            conn.close()
+            database.release_connection(conn)
 
             if user and user['password_hash'] == password:
                 access_token = create_access_token(
@@ -144,10 +146,10 @@ def google_auth():
 
     conn = database.get_connection()
     if conn:
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute("SELECT * FROM users WHERE identifier = %s", (email,))
         user = cursor.fetchone()
-        conn.close()
+        database.release_connection(conn)
 
         if user:
             access_token = create_access_token(
@@ -170,10 +172,10 @@ def worker_login():
 
         conn = database.get_connection()
         if conn:
-            cursor = conn.cursor(dictionary=True)
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             cursor.execute("SELECT * FROM workers WHERE phone = %s", (phone,))
             worker = cursor.fetchone()
-            conn.close()
+            database.release_connection(conn)
 
             if worker:
                 otp = random.randint(1000, 9999)
@@ -201,10 +203,10 @@ def verify_otp():
             phone = session.get('temp_phone')
             conn = database.get_connection()
             if conn:
-                cursor = conn.cursor(dictionary=True)
+                cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
                 cursor.execute("SELECT * FROM workers WHERE phone = %s", (phone,))
                 worker = cursor.fetchone()
-                conn.close()
+                database.release_connection(conn)
 
                 access_token = create_access_token(
                     identity=worker['phone'],
@@ -219,6 +221,19 @@ def verify_otp():
             flash("Invalid OTP. Please try again.", "error")
 
     return render_template('verify_otp.html')
+
+@app.route('/dispute/<int:entry_id>', methods=['POST'])
+@role_required('Worker')
+def dispute_entry(entry_id):
+    conn = database.get_connection()
+    if conn:
+        cursor = conn.cursor()
+        # Set is_disputed to TRUE and revert approval_status to 'Pending' so Admin MUST review it
+        cursor.execute("UPDATE work_entries SET is_disputed = TRUE, approval_status = 'Pending' WHERE entry_id = %s", (entry_id,))
+        conn.commit()
+        database.release_connection(conn)
+        flash("Dispute raised successfully. Admin has been notified and payment is on hold.", "success")
+    return redirect(url_for('index'))
 
 @app.route('/logout')
 def logout():
@@ -250,18 +265,18 @@ def approve_logs():
     conn = database.get_connection()
     logs = []
     if conn:
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         query = """
             SELECT e.*, w.name as worker_name, w.worker_type, u.name as supervisor_name 
             FROM work_entries e 
             JOIN workers w ON e.worker_id = w.worker_id 
             LEFT JOIN users u ON e.supervisor_id = u.user_id
-            WHERE e.approval_status = 'Pending' AND e.hours_worked > 8
+            WHERE e.approval_status = 'Pending' AND (e.hours_worked > 8 OR e.is_disputed = TRUE)
             ORDER BY e.work_date DESC
         """
         cursor.execute(query)
         logs = cursor.fetchall()
-        conn.close()
+        database.release_connection(conn)
     return render_template('approve_logs.html', logs=logs)
 
 @app.route('/admin/verify_entry/<int:entry_id>', methods=['POST'])
@@ -325,6 +340,28 @@ def record_work():
         notes = request.form.get('notes', '')
         gps_location = request.form.get('gps_location', '')
         
+        # --- Geofencing Validation (For Viva Demo) ---
+        site_lat_env = os.getenv("SITE_LAT")
+        site_lng_env = os.getenv("SITE_LNG")
+        
+        if site_lat_env and site_lng_env:
+            if not gps_location:
+                flash("❌ Error: GPS location is mandatory to verify you are on site.", "danger")
+                return redirect(url_for('record_work'))
+            try:
+                sup_lat, sup_lng = map(float, gps_location.split(','))
+                # Using Haversine formula to check distance
+                distance = logic.calculate_distance(sup_lat, sup_lng, float(site_lat_env), float(site_lng_env))
+                
+                # Allow max 500 meters radius from site
+                if distance > 500:
+                    flash(f"❌ Geofence Error: Location declined. You are {int(distance)} meters away from the site (Max: 500m).", "danger")
+                    return redirect(url_for('record_work'))
+            except Exception:
+                flash("❌ Error: Invalid GPS coordinates.", "danger")
+                return redirect(url_for('record_work'))
+        # ---------------------------------------------
+
         photo_path = None
         if hours > 8:
             if 'photo' not in request.files or request.files['photo'].filename == '':
@@ -339,11 +376,11 @@ def record_work():
 
         conn = database.get_connection()
         if conn:
-            cursor = conn.cursor(dictionary=True)
+            cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
             cursor.execute("SELECT user_id FROM users WHERE identifier = %s", (get_jwt_identity(),))
             user = cursor.fetchone()
             supervisor_id = user['user_id'] if user else None
-            conn.close()
+            database.release_connection(conn)
 
             success = logic.add_work_entry(
                 worker_id=worker_id,
@@ -362,10 +399,10 @@ def record_work():
     conn = database.get_connection()
     workers = []
     if conn:
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         cursor.execute("SELECT * FROM workers")
         workers = cursor.fetchall()
-        conn.close()
+        database.release_connection(conn)
     
     from datetime import datetime
     today_date = datetime.now().strftime('%Y-%m-%d')
@@ -382,7 +419,7 @@ def history():
     history_data = []
 
     if conn:
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         if user_role == 'Worker':
             query = """
                 SELECT e.*, w.name as worker_name, u.name as supervisor_name 
@@ -404,7 +441,7 @@ def history():
             cursor.execute(query)
 
         history_data = cursor.fetchall()
-        conn.close()
+        database.release_connection(conn)
 
     return render_template('history.html', history=history_data)
 
