@@ -1,9 +1,22 @@
 {% extends 'base.html' %}
 {% block title %}Add Supervisor — ShramSetu{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+    #worksite-map {
+        height: 280px;
+        border-radius: 10px;
+        border: 1.5px solid var(--border);
+        z-index: 0;
+    }
+    .leaflet-container { font-family: 'DM Sans', sans-serif; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-lg-5 col-md-8">
+    <div class="col-lg-6 col-md-9">
         <div style="border-radius:20px; border:1px solid var(--border); background:var(--card-bg); overflow:hidden;">
             <div style="padding:1.75rem 2rem; background:linear-gradient(135deg, var(--sky) 0%, #124e73 100%); position:relative; overflow:hidden;">
                 <div style="position:absolute; right:-30px; top:-30px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,0.08);"></div>
@@ -13,7 +26,7 @@
                     </div>
                     <div>
                         <h3 style="font-family:'Syne',sans-serif; font-weight:800; color:white; margin:0; font-size:1.2rem;">New Supervisor</h3>
-                        <p style="color:rgba(255,255,255,0.8); font-size:0.83rem; margin:0;">Create credentials for a site manager</p>
+                        <p style="color:rgba(255,255,255,0.8); font-size:0.83rem; margin:0;">Create credentials & assign a worksite</p>
                     </div>
                 </div>
             </div>
@@ -28,10 +41,43 @@
                         <input type="text" name="username" class="form-control" placeholder="ravi_sup or ravi@shram.com" required>
                         <div class="form-text">Supervisor will use this to log in.</div>
                     </div>
-                    <div class="mb-4">
+                    <div class="mb-3">
                         <label class="form-label">Temporary Password</label>
                         <input type="text" name="password" class="form-control" placeholder="Create a secure password" required>
                     </div>
+
+                    <!-- Map Worksite Picker -->
+                    <div class="mb-4">
+                        <label class="form-label d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-location-dot" style="color:var(--saffron);"></i>
+                            Worksite Location (for Geofencing)
+                        </label>
+                        <div style="padding:1rem; border:1px dashed var(--border); border-radius:12px; background:var(--cream);">
+                            <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:0.6rem;">
+                                <i class="fa-solid fa-info-circle me-1"></i>
+                                <strong>Click on the map</strong> to pin the worksite. Supervisor must be within 500m to log entries.
+                            </p>
+
+                            <!-- Hidden inputs -->
+                            <input type="hidden" name="site_lat" id="site_lat">
+                            <input type="hidden" name="site_lng" id="site_lng">
+
+                            <!-- Coordinates display -->
+                            <div id="gps-status" style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.5rem;">
+                                📍 No location pinned yet — click map or use button below.
+                            </div>
+
+                            <!-- Leaflet Map -->
+                            <div id="worksite-map"></div>
+
+                            <!-- Use my location button -->
+                            <button type="button" id="get-location-btn" class="btn btn-sm w-100 mt-2"
+                                    style="background:var(--sky); color:white; border:none;">
+                                <i class="fa-solid fa-crosshairs me-2"></i>Use My Current Location
+                            </button>
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn w-100 btn-lg" style="background:var(--sky); color:white; border:none;">
                         <i class="fa-solid fa-user-plus me-2"></i>Create Account
                     </button>
@@ -45,4 +91,81 @@
         </div>
     </div>
 </div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// Initialize map centered on India
+const map = L.map('worksite-map').setView([20.5937, 78.9629], 5);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 19
+}).addTo(map);
+
+let marker = null;
+
+const pinIcon = L.divIcon({
+    className: '',
+    html: `<div style="
+        background: #E8722A;
+        width: 28px; height: 28px;
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        border: 3px solid white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    "></div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 28]
+});
+
+function setPin(lat, lng) {
+    if (marker) map.removeLayer(marker);
+    marker = L.marker([lat, lng], { icon: pinIcon, draggable: true }).addTo(map);
+
+    // Allow dragging marker to fine-tune
+    marker.on('dragend', function(e) {
+        const pos = e.target.getLatLng();
+        updateCoords(pos.lat, pos.lng);
+    });
+
+    updateCoords(lat, lng);
+    map.setView([lat, lng], 16);
+}
+
+function updateCoords(lat, lng) {
+    document.getElementById('site_lat').value = lat.toFixed(6);
+    document.getElementById('site_lng').value = lng.toFixed(6);
+    document.getElementById('gps-status').innerHTML =
+        `<i class="fa-solid fa-circle-check me-1" style="color:#22c55e;"></i>
+         <strong>Pinned:</strong> ${lat.toFixed(5)}, ${lng.toFixed(5)}
+         <span style="font-size:0.7rem; color:var(--text-muted); margin-left:6px;">(drag pin to adjust)</span>`;
+}
+
+// Click on map to place pin
+map.on('click', function(e) {
+    setPin(e.latlng.lat, e.latlng.lng);
+});
+
+// Use current location button
+document.getElementById('get-location-btn').addEventListener('click', function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Getting location...';
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(pos) {
+            setPin(pos.coords.latitude, pos.coords.longitude);
+            btn.innerHTML = '<i class="fa-solid fa-check me-2"></i>Location Set';
+            btn.disabled = false;
+        }, function() {
+            alert('⚠️ Could not get location. Please click on the map to pin manually.');
+            btn.innerHTML = '<i class="fa-solid fa-crosshairs me-2"></i>Try Again';
+            btn.disabled = false;
+        });
+    } else {
+        alert('Geolocation not supported. Please click on the map to pin.');
+        btn.disabled = false;
+    }
+});
+</script>
 {% endblock %}
+

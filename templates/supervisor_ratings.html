@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% block title %}Supervisor Ratings — ShramSetu{% endblock %}
+
+{% block extra_head %}
+<style>
+    .rating-wrap { border-radius: 16px; border: 1px solid var(--border); background: var(--card-bg); overflow: hidden; }
+    .rating-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .stars { color: #f59e0b; font-size: 1rem; letter-spacing: 2px; }
+    .star-empty { color: var(--border); }
+    .rating-bar-wrap { width: 80px; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; display: inline-block; vertical-align: middle; margin-left: 6px; }
+    .rating-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #f59e0b, #ef4444); transition: width 0.4s; }
+    .sup-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--sky-light); color: var(--sky); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:2rem;">
+    <div>
+        <h2><i class="fa-solid fa-star me-2" style="color:#f59e0b;"></i>Supervisor Ratings</h2>
+        <p>Accountability scores based on worker disputes</p>
+    </div>
+    <a href="/" class="btn btn-sm" style="border:1px solid var(--border); color:var(--text);">
+        <i class="fa-solid fa-arrow-left me-1"></i>Back
+    </a>
+</div>
+
+<div class="rating-wrap">
+    <div class="rating-header">
+        <span style="font-family:'Syne',sans-serif; font-weight:700;">All Supervisors</span>
+        <span style="font-size:0.8rem; color:var(--text-muted);">⭐ Default: 5.0 · Drops 0.2 per dispute</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th class="ps-4">Supervisor</th>
+                    <th>Rating</th>
+                    <th>Disputes</th>
+                    <th>Work Site</th>
+                    <th>Status</th>
+                    <th class="pe-4 text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sup in supervisors %}
+                <tr>
+                    <td class="ps-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="sup-avatar">{{ sup.name[0]|upper }}</div>
+                            <div>
+                                <div style="font-weight:600; font-size:0.875rem;">{{ sup.name }}</div>
+                                <div style="font-size:0.72rem; color:var(--text-muted);">{{ sup.identifier }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% set rating = sup.rating or 5.0 %}
+                        <div class="d-flex align-items-center gap-2">
+                            <span style="font-family:'Syne',sans-serif; font-weight:700; font-size:1rem;
+                                color: {{ '#ef4444' if rating < 3.0 else ('#f59e0b' if rating < 4.0 else '#22c55e') }};">
+                                {{ "%.1f"|format(rating) }}
+                            </span>
+                            <div class="rating-bar-wrap">
+                                <div class="rating-bar-fill" style="width:{{ ((rating / 5.0) * 100)|int }}%;
+                                    background: {{ 'linear-gradient(90deg,#ef4444,#f97316)' if rating < 3.0 else ('linear-gradient(90deg,#f59e0b,#facc15)' if rating < 4.0 else 'linear-gradient(90deg,#22c55e,#4ade80)') }};"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% set disputes = sup.total_disputes or 0 %}
+                        <span class="badge" style="background:{{ '#fde8e8' if disputes > 0 else 'var(--jade-light)' }}; color:{{ '#c0392b' if disputes > 0 else 'var(--jade)' }}; font-size:0.8rem;">
+                            {% if disputes > 0 %}
+                                <i class="fa-solid fa-triangle-exclamation me-1"></i>{{ disputes }} dispute{{ 's' if disputes != 1 else '' }}
+                            {% else %}
+                                <i class="fa-solid fa-circle-check me-1"></i>No disputes
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td style="font-size:0.8rem; color:var(--text-muted);">
+                        {% if sup.site_lat and sup.site_lng %}
+                            <i class="fa-solid fa-location-dot me-1" style="color:var(--saffron);"></i>
+                            {{ "%.4f"|format(sup.site_lat) }}, {{ "%.4f"|format(sup.site_lng) }}
+                        {% else %}
+                            <span style="color:var(--border);">Not set</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% set rating = sup.rating or 5.0 %}
+                        {% if rating >= 4.0 %}
+                            <span class="badge status-approved">Good</span>
+                        {% elif rating >= 2.5 %}
+                            <span class="badge" style="background:#fff7e6; color:#d97706;">Average</span>
+                        {% else %}
+                            <span class="badge status-rejected">Poor</span>
+                        {% endif %}
+                    </td>
+                    <td class="pe-4 text-end">
+                        <button type="button" class="btn btn-sm"
+                            style="background:#fde8e8; color:#c0392b; border:none; border-radius:8px; padding:6px 10px;"
+                            data-bs-toggle="modal" data-bs-target="#deleteModal{{ sup.user_id }}"
+                            title="Remove this supervisor">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="padding:3rem; text-align:center; color:var(--text-muted);">
+                        <i class="fa-solid fa-user-tie" style="font-size:2rem; margin-bottom:0.5rem; display:block; opacity:0.3;"></i>
+                        No supervisors found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modals -->
+{% for sup in supervisors %}
+<div class="modal fade" id="deleteModal{{ sup.user_id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header" style="border-bottom:1px solid var(--border);">
+                <h5 class="modal-title" style="font-size:1rem;"><i class="fa-solid fa-trash-can me-2" style="color:#c0392b;"></i>Remove Supervisor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="font-size:0.875rem; color:var(--text-muted);">
+                Are you sure you want to remove <strong style="color:var(--text-primary);">{{ sup.name }}</strong>? This action cannot be undone.
+            </div>
+            <div class="modal-footer" style="border-top:1px solid var(--border);">
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="/admin/delete_supervisor/{{ sup.user_id }}" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-danger">
+                        <i class="fa-solid fa-trash-can me-1"></i>Yes, Remove
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+    // Move all modals directly to the body to escape CSS transform/animation stacking contexts
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll('.modal').forEach(modal => {
+            document.body.appendChild(modal);
+        });
+    });
+</script>
+{% endblock %}

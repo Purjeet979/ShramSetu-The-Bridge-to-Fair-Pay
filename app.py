@@ -225,15 +225,30 @@ def verify_otp():
 @app.route('/dispute/<int:entry_id>', methods=['POST'])
 @role_required('Worker')
 def dispute_entry(entry_id):
+    reason = request.form.get('reason', '').strip()
     conn = database.get_connection()
     if conn:
-        cursor = conn.cursor()
-        # Set is_disputed to TRUE and revert approval_status to 'Pending' so Admin MUST review it
-        cursor.execute("UPDATE work_entries SET is_disputed = TRUE, approval_status = 'Pending' WHERE entry_id = %s", (entry_id,))
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        # Fetch supervisor_id for rating update
+        cursor.execute("SELECT supervisor_id FROM work_entries WHERE entry_id = %s", (entry_id,))
+        row = cursor.fetchone()
+        supervisor_id = row['supervisor_id'] if row else None
+
+        cursor.execute(
+            "UPDATE work_entries SET is_disputed = TRUE, approval_status = 'Pending', dispute_reason = %s WHERE entry_id = %s",
+            (reason, entry_id)
+        )
         conn.commit()
+
+        # Update supervisor rating
+        if supervisor_id:
+            logic.update_supervisor_rating(supervisor_id)
+
+        cursor.close()
         database.release_connection(conn)
         flash("Dispute raised successfully. Admin has been notified and payment is on hold.", "success")
     return redirect(url_for('index'))
+
 
 @app.route('/logout')
 def logout():
@@ -302,7 +317,11 @@ def add_supervisor():
         name = request.form['name']
         username = request.form['username']
         password = request.form['password']
-        success, message = logic.add_supervisor_to_db(name, username, password)
+        site_lat = request.form.get('site_lat') or None
+        site_lng = request.form.get('site_lng') or None
+        if site_lat: site_lat = float(site_lat)
+        if site_lng: site_lng = float(site_lng)
+        success, message = logic.add_supervisor_to_db(name, username, password, site_lat, site_lng)
         if success:
             flash(f"✅ Success: Supervisor {name} created!", "success")
             return redirect(url_for('add_supervisor'))
@@ -340,52 +359,84 @@ def record_work():
         notes = request.form.get('notes', '')
         gps_location = request.form.get('gps_location', '')
         
-        # --- Geofencing Validation (For Viva Demo) ---
-        site_lat_env = os.getenv("SITE_LAT")
-        site_lng_env = os.getenv("SITE_LNG")
-        
-        if site_lat_env and site_lng_env:
+        # --- Per-Supervisor Geofencing ---
+        # Fetch supervisor from DB to get their site coordinates
+        conn_geo = database.get_connection()
+        site_lat_db = site_lng_db = None
+        current_supervisor_id = None
+        if conn_geo:
+            cur_geo = conn_geo.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            cur_geo.execute("SELECT user_id, site_lat, site_lng FROM users WHERE identifier = %s", (get_jwt_identity(),))
+            sup_row = cur_geo.fetchone()
+            if sup_row:
+                current_supervisor_id = sup_row['user_id']
+                site_lat_db = sup_row['site_lat']
+                site_lng_db = sup_row['site_lng']
+            cur_geo.close()
+            database.release_connection(conn_geo)
+
+        if site_lat_db and site_lng_db:
             if not gps_location:
                 flash("❌ Error: GPS location is mandatory to verify you are on site.", "danger")
                 return redirect(url_for('record_work'))
             try:
                 sup_lat, sup_lng = map(float, gps_location.split(','))
-                # Using Haversine formula to check distance
-                distance = logic.calculate_distance(sup_lat, sup_lng, float(site_lat_env), float(site_lng_env))
-                
-                # Allow max 500 meters radius from site
+                distance = logic.calculate_distance(sup_lat, sup_lng, float(site_lat_db), float(site_lng_db))
                 if distance > 500:
-                    flash(f"❌ Geofence Error: Location declined. You are {int(distance)} meters away from the site (Max: 500m).", "danger")
+                    flash(f"❌ Geofence Error: You are {int(distance)}m from the work site (Max: 500m).", "danger")
                     return redirect(url_for('record_work'))
             except Exception:
                 flash("❌ Error: Invalid GPS coordinates.", "danger")
                 return redirect(url_for('record_work'))
-        # ---------------------------------------------
+        # ----------------------------------
 
         photo_path = None
         if hours > 8:
             if 'photo' not in request.files or request.files['photo'].filename == '':
                 flash("❌ Error: Photo is mandatory for entries > 8 hours.", "danger")
                 return redirect(url_for('record_work'))
-            
             file = request.files['photo']
             if file and allowed_file(file.filename):
                 filename = secure_filename(f"{int(time.time())}_{file.filename}")
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                photo_path = f"uploads/{filename}"
+                # --- Upload to Supabase Storage ---
+                supabase_url = os.getenv("SUPABASE_URL")
+                supabase_key = os.getenv("SUPABASE_KEY")
+                if supabase_url and supabase_key and 'your_supabase' not in supabase_url:
+                    try:
+                        from supabase import create_client
+                        sb = create_client(supabase_url, supabase_key)
+                        file_bytes = file.read()
+                        sb.storage.from_("overtime-photos").upload(
+                            path=filename,
+                            file=file_bytes,
+                            file_options={"content-type": file.content_type}
+                        )
+                        photo_path = f"{supabase_url}/storage/v1/object/public/overtime-photos/{filename}"
+                    except Exception as e:
+                        print(f"Supabase upload error: {e}. Falling back to local storage.")
+                        file.seek(0)
+                        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                        photo_path = f"uploads/{filename}"
+                else:
+                    # Fallback: local storage
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    photo_path = f"uploads/{filename}"
+                # ----------------------------------
 
         conn = database.get_connection()
         if conn:
             cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-            cursor.execute("SELECT user_id FROM users WHERE identifier = %s", (get_jwt_identity(),))
-            user = cursor.fetchone()
-            supervisor_id = user['user_id'] if user else None
+            if current_supervisor_id is None:
+                cursor.execute("SELECT user_id FROM users WHERE identifier = %s", (get_jwt_identity(),))
+                user = cursor.fetchone()
+                current_supervisor_id = user['user_id'] if user else None
+            cursor.close()
             database.release_connection(conn)
 
             success = logic.add_work_entry(
                 worker_id=worker_id,
                 hours_worked=hours,
-                supervisor_id=supervisor_id,
+                supervisor_id=current_supervisor_id,
                 work_type=work_type,
                 gps_location=gps_location,
                 photo_path=photo_path
@@ -395,6 +446,7 @@ def record_work():
             else:
                 flash("❌ Error recording work.", "error")
         return redirect(url_for('record_work'))
+
 
     conn = database.get_connection()
     workers = []
@@ -478,6 +530,40 @@ def set_language(lang):
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+
+@app.route('/admin/supervisor_ratings')
+@role_required('Admin')
+def supervisor_ratings():
+    conn = database.get_connection()
+    supervisors = []
+    if conn:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cursor.execute("""
+            SELECT user_id, name, identifier, rating, total_disputes, site_lat, site_lng
+            FROM users WHERE role = 'Supervisor'
+            ORDER BY rating ASC
+        """)
+        supervisors = [dict(row) for row in cursor.fetchall()]
+        cursor.close()
+        database.release_connection(conn)
+    return render_template('supervisor_ratings.html', supervisors=supervisors)
+
+@app.route('/admin/delete_supervisor/<int:user_id>', methods=['POST'])
+@role_required('Admin')
+def delete_supervisor(user_id):
+    conn = database.get_connection()
+    if conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM users WHERE user_id = %s AND role = 'Supervisor'", (user_id,))
+        conn.commit()
+        cursor.close()
+        database.release_connection(conn)
+        flash("✅ Supervisor removed successfully.", "success")
+    else:
+        flash("❌ Could not connect to database.", "danger")
+    return redirect(url_for('supervisor_ratings'))
+
 if __name__ == '__main__':
     database.setup_tables()
     app.run(debug=True)
+

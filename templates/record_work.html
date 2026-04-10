@@ -185,9 +185,9 @@ function getLocation() {
         (pos) => {
             const lat = pos.coords.latitude.toFixed(6), lng = pos.coords.longitude.toFixed(6);
             input.value = `${lat},${lng}`;
-            statusEl.textContent = 'Location Verified ✓';
+            statusEl.textContent = 'Location Captured ✓';
             btn.className = 'gps-btn verified';
-            coords.textContent = `Lat: ${lat}, Lng: ${lng}`;
+            coords.textContent = `Lat: ${lat}, Lng: ${lng} (Will be verified on submit)`;
             coords.style.display = 'block';
         },
         () => {

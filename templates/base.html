@@ -17,7 +17,7 @@
       "imports": {
         "react": "https://esm.sh/react@18.2.0",
         "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-        "@splinetool/react-spline": "https://esm.sh/@splinetool/react-spline@4.1.0"
+        "@splinetool/react-spline": "https://esm.sh/@splinetool/react-spline@4.1.0?external=react,react-dom"
       }
     }
     </script>
@@ -109,7 +109,14 @@
             box-shadow: 0 2px 20px rgba(44,26,14,0.06);
             padding: 0.75rem 0;
             transition: all 0.3s;
+            isolation: isolate;
         }
+        /* Fix: modal backdrop must render above the blurred navbar */
+        .modal-backdrop { z-index: 1040 !important; }
+        .modal { z-index: 1050 !important; }
+        /* Fix: disable 3D canvas clicks when modal is open */
+        body.modal-open #react-3d-root { pointer-events: none !important; }
+        body.modal-open #react-3d-root * { pointer-events: none !important; }
         .navbar-brand {
             font-family: 'Syne', sans-serif;
             font-weight: 800;
@@ -431,7 +438,9 @@
                 {% if current_user.role == 'Admin' %}
                 <li class="nav-item"><a class="nav-link" id="nav-approve" href="/admin/approve_logs">{{ _('approvals') }}</a></li>
                 <li class="nav-item"><a class="nav-link" id="nav-pay" href="/payments">{{ _('payments') }}</a></li>
+                <li class="nav-item"><a class="nav-link" id="nav-ratings" href="/admin/supervisor_ratings"><i class="fa-solid fa-star fa-sm me-1" style="color:#f59e0b;"></i>Ratings</a></li>
                 {% endif %}
+
 
                 <li class="nav-item"><a class="nav-link" id="nav-history" href="/history">{{ _('history') }}</a></li>
 

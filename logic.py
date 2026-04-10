@@ -263,18 +263,16 @@ def get_worker_stats(identifier):
 
     return stats, entries
 
-def add_supervisor_to_db(name, username, password):
+def add_supervisor_to_db(name, username, password, site_lat=None, site_lng=None):
     conn = database.get_connection()
     if conn:
         cursor = conn.cursor()
         try:
-            # Note: Abhi hum plain password save kar rahe hain jaise admin ka kiya tha.
-            sql = "INSERT INTO users (name, identifier, password_hash, role) VALUES (%s, %s, %s, 'Supervisor')"
-            cursor.execute(sql, (name, username, password))
+            sql = "INSERT INTO users (name, identifier, password_hash, role, site_lat, site_lng, rating, total_disputes) VALUES (%s, %s, %s, 'Supervisor', %s, %s, 5.0, 0)"
+            cursor.execute(sql, (name, username, password, site_lat, site_lng))
             conn.commit()
             return True, "Supervisor added successfully."
         except psycopg2.IntegrityError:
-            # Agar username pehle se exist karta hai
             return False, "This Username/Email is already taken!"
         except Exception as e:
             return False, str(e)
@@ -282,6 +280,34 @@ def add_supervisor_to_db(name, username, password):
             cursor.close()
             database.release_connection(conn)
     return False, "Database connection failed."
+
+
+def update_supervisor_rating(supervisor_id):
+    """
+    Recalculates a supervisor's rating based on total disputes they've received.
+    Rating = max(1.0, 5.0 - (total_disputes * 0.2))
+    """
+    conn = database.get_connection()
+    if not conn:
+        return
+    cursor = conn.cursor()
+    try:
+        # Count total disputes for entries logged by this supervisor
+        cursor.execute(
+            "SELECT COUNT(*) FROM work_entries WHERE supervisor_id = %s AND is_disputed = TRUE",
+            (supervisor_id,)
+        )
+        total_disputes = cursor.fetchone()[0]
+        new_rating = max(1.0, round(5.0 - (total_disputes * 0.2), 1))
+        cursor.execute(
+            "UPDATE users SET rating = %s, total_disputes = %s WHERE user_id = %s",
+            (new_rating, total_disputes, supervisor_id)
+        )
+        conn.commit()
+    finally:
+        cursor.close()
+        database.release_connection(conn)
+
 
 
 def send_real_otp(phone_number, otp):
