@@ -31,7 +31,6 @@
 - [🚀 Quick Start](#-quick-start)
 - [📚 Documentation](#-documentation)
 - [🤝 Contributing](#-contributing)
-- [📜 License](#-license)
 
 ---
 
